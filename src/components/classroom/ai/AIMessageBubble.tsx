@@ -1,10 +1,20 @@
-import { Bookmark, BookmarkCheck, Copy, RefreshCw, Sparkles, User2 } from 'lucide-react';
+import {
+  Bookmark,
+  BookmarkCheck,
+  Copy,
+  RefreshCw,
+  Sparkles,
+  Square,
+  User2,
+  Volume2,
+} from 'lucide-react';
 import { useState } from 'react';
 import type { AIMessage } from '@/types/ai';
 import type { CreateNoteInput } from '@/types/notes';
 import { cn } from '@/lib/utils/cn';
 import { truncate } from '@/lib/utils/format';
 import { Button } from '@/components/ui/Button';
+import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 
 interface Props {
   message: AIMessage;
@@ -26,6 +36,10 @@ export function AIMessageBubble({
   const [copied, setCopied] = useState(false);
   const [savedAsNote, setSavedAsNote] = useState(false);
   const [savePending, setSavePending] = useState(false);
+
+  const { isSupported: isSpeechOutSupported, speakingId, speak, stop } =
+    useSpeechSynthesis();
+  const isSpeakingThisMessage = speakingId === message.id;
 
   async function handleCopy() {
     try {
@@ -105,6 +119,32 @@ export function AIMessageBubble({
             >
               {copied ? 'Copiado' : 'Copiar'}
             </Button>
+            {isSpeechOutSupported ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() =>
+                  isSpeakingThisMessage
+                    ? stop()
+                    : speak(message.id, message.content)
+                }
+                aria-label={
+                  isSpeakingThisMessage
+                    ? 'Detener lectura en voz alta'
+                    : 'Escuchar mensaje en voz alta'
+                }
+                aria-pressed={isSpeakingThisMessage}
+                leftIcon={
+                  isSpeakingThisMessage ? (
+                    <Square className="h-3.5 w-3.5" aria-hidden />
+                  ) : (
+                    <Volume2 className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                  )
+                }
+              >
+                {isSpeakingThisMessage ? 'Detener' : 'Escuchar'}
+              </Button>
+            ) : null}
             <Button
               size="sm"
               variant="ghost"

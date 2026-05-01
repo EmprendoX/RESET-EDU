@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Send, Sparkles, X } from 'lucide-react';
+import { Mic, Send, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils/cn';
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import type { MentorMode } from '@/types/ai';
 import { truncate } from '@/lib/utils/format';
 
@@ -34,6 +35,16 @@ export function AIInputBox({
 }: Props) {
   const [value, setValue] = useState(initialValue ?? '');
   const taRef = useRef<HTMLTextAreaElement | null>(null);
+  const dictationPrefixRef = useRef('');
+
+  const {
+    isSupported: isSpeechSupported,
+    isListening,
+    transcript,
+    interimTranscript,
+    start: startSpeech,
+    stop: stopSpeech,
+  } = useSpeechRecognition({ lang: 'es-ES' });
 
   useEffect(() => {
     if (initialValue !== undefined) {
@@ -42,7 +53,25 @@ export function AIInputBox({
     }
   }, [initialValue]);
 
+  useEffect(() => {
+    if (!isListening) return;
+    setValue(
+      dictationPrefixRef.current + transcript + interimTranscript,
+    );
+  }, [interimTranscript, isListening, transcript]);
+
+  function handleMicToggle() {
+    if (disabled) return;
+    if (isListening) {
+      stopSpeech();
+      return;
+    }
+    dictationPrefixRef.current = value;
+    startSpeech();
+  }
+
   function handleSend() {
+    if (isListening) stopSpeech();
     const trimmed = value.trim();
     if (!trimmed || disabled) return;
     onSend(trimmed);
@@ -85,13 +114,29 @@ export function AIInputBox({
             }
           }}
           rows={2}
-          disabled={disabled}
+          disabled={disabled || isListening}
           placeholder="Escribe tu pregunta o usa los botones rápidos arriba…"
           aria-label="Mensaje al mentor IA"
           className={cn(
             'scrollbar-thin max-h-40 min-h-[40px] flex-1 resize-none border-0 bg-transparent p-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none',
           )}
         />
+        {isSpeechSupported ? (
+          <Button
+            type="button"
+            variant={isListening ? 'ai' : 'ghost'}
+            size="icon"
+            onClick={handleMicToggle}
+            disabled={disabled}
+            aria-label={
+              isListening ? 'Detener dictado por voz' : 'Dictar por voz'
+            }
+            aria-pressed={isListening}
+            className={cn(isListening && 'animate-pulse')}
+          >
+            <Mic className="h-4 w-4" aria-hidden />
+          </Button>
+        ) : null}
         <Button
           variant="ai"
           size="icon"
