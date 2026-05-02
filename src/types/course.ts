@@ -58,3 +58,8 @@ export interface PublishedCourseSummary {
   cover_image_url: string;
   lessonCount: number;
 }
+
+/** Catálogo publicado con flag de acceso al aula (enrollment / gratis / rol admin). */
+export interface PublishedCatalogRow extends PublishedCourseSummary {
+  hasAccess: boolean;
+}

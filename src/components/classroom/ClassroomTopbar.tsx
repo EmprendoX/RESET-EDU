@@ -1,11 +1,20 @@
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Building2, GraduationCap, LayoutDashboard, User2 } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  ArrowLeft,
+  Building2,
+  GraduationCap,
+  LayoutDashboard,
+  LogOut,
+  User2,
+} from 'lucide-react';
 import type { Course } from '@/types/course';
 import type { Lesson } from '@/types/lesson';
 import { LoadingSkeleton } from '@/components/common/LoadingSkeleton';
 import { LessonProgressBar } from './progress/LessonProgressBar';
 import { LessonNavigation } from './progress/LessonNavigation';
 import { useAuth } from '@/hooks/useAuth';
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils/cn';
 
 interface Props {
@@ -37,7 +46,22 @@ export function ClassroomTopbar({
   loading,
   className,
 }: Props) {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+  const [signingOut, setSigningOut] = useState(false);
+  const showSignOut = isSupabaseConfigured() && isAuthenticated;
+
+  async function handleSignOut() {
+    const sb = getSupabase();
+    if (!sb) return;
+    setSigningOut(true);
+    try {
+      await sb.auth.signOut();
+      navigate('/?signedOut=1', { replace: true });
+    } finally {
+      setSigningOut(false);
+    }
+  }
 
   return (
     <header
@@ -117,13 +141,25 @@ export function ClassroomTopbar({
           />
         </div>
 
-        <button
-          type="button"
-          aria-label={user.full_name ?? 'Cuenta'}
-          className="focus-ring inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50"
-        >
-          <User2 className="h-4 w-4" aria-hidden />
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          {showSignOut ? (
+            <button
+              type="button"
+              disabled={signingOut}
+              onClick={() => void handleSignOut()}
+              className="focus-ring inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50"
+            >
+              <LogOut className="h-3.5 w-3.5" aria-hidden />
+              Salir
+            </button>
+          ) : null}
+          <span
+            className="focus-ring inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm"
+            aria-label={user.full_name ?? 'Cuenta'}
+          >
+            <User2 className="h-4 w-4" aria-hidden />
+          </span>
+        </div>
       </div>
 
       <div className="px-3 pb-2 md:hidden">

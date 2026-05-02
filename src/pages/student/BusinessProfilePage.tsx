@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ZodError } from 'zod';
 import { ChevronRight } from 'lucide-react';
@@ -8,9 +8,12 @@ import {
   type BusinessProfileFormInput,
 } from '@/lib/business/businessProfileSchema';
 import { useBusinessProfile } from '@/hooks/useBusinessProfile';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
-import { LoadingSkeleton } from '@/components/common/LoadingSkeleton';
+import { FullScreenSpinner, LoadingSkeleton } from '@/components/common';
 import { ErrorState } from '@/components/common/ErrorState';
+import { buildLoginUrl } from '@/lib/auth/loginRedirect';
+import { isSupabaseConfigured } from '@/lib/supabase/client';
 
 function SectionTitle({
   title,
@@ -32,6 +35,8 @@ function SectionTitle({
 }
 
 export function BusinessProfilePage() {
+  const location = useLocation();
+  const { isAuthenticated, authReady } = useAuth();
   const {
     profile,
     isLoading,
@@ -75,6 +80,21 @@ export function BusinessProfilePage() {
       notes: profile.notes ?? '',
     });
   }, [profile, reset]);
+
+  if (!authReady) {
+    return <FullScreenSpinner label="Cargando sesión…" />;
+  }
+  if (!isAuthenticated) {
+    if (isSupabaseConfigured()) {
+      return (
+        <Navigate
+          to={buildLoginUrl(location.pathname, location.search)}
+          replace
+        />
+      );
+    }
+    return <Navigate to="/" replace />;
+  }
 
   async function onSubmit(values: BusinessProfileFormInput) {
     const parsed = businessProfileFormSchema.safeParse(values);

@@ -5,6 +5,7 @@ import { ClassroomPage } from '@/pages/student/ClassroomPage';
 import { StudentDashboardPage } from '@/pages/student/StudentDashboardPage';
 import { BusinessProfilePage } from '@/pages/student/BusinessProfilePage';
 import { LandingPage } from '@/pages/public/LandingPage';
+import { LoginPage } from '@/pages/auth/LoginPage';
 import { NotFoundPage } from '@/pages/public/NotFoundPage';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
 import { AdminCourseListPage } from '@/pages/admin/AdminCourseListPage';
@@ -21,6 +22,7 @@ export function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/dashboard" element={<StudentDashboardPage />} />
       <Route path="/mi-negocio" element={<BusinessProfilePage />} />
       <Route

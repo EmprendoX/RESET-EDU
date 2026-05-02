@@ -5,3 +5,4 @@ export { ErrorState } from './ErrorState';
 export { UnauthorizedState } from './UnauthorizedState';
 export { FileLoadingState } from './FileLoadingState';
 export { FileErrorState } from './FileErrorState';
+export { FullScreenSpinner } from './FullScreenSpinner';

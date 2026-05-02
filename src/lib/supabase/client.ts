@@ -1,20 +1,31 @@
-/**
- * Placeholder for the future Supabase client.
- *
- * IMPORTANT: This file is intentionally NOT importing or instantiating Supabase
- * during the mock-data phase. Hooks must NEVER import this module yet.
- *
- * When Supabase is connected, this file will export a typed `supabase` client
- * built from environment variables (see `src/config/env.ts`). Until then,
- * it only documents the contract.
- */
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { env } from '@/config/env';
 
-export const SUPABASE_NOT_CONNECTED = true as const;
+let client: SupabaseClient | null = null;
 
-export interface SupabaseClientPlaceholder {
-  readonly connected: false;
+export function isSupabaseConfigured(): boolean {
+  return Boolean(
+    env.supabase.url?.trim() && env.supabase.anonKey?.trim(),
+  );
 }
 
-export const supabasePlaceholder: SupabaseClientPlaceholder = {
-  connected: false,
-};
+/**
+ * Cliente browser; solo se crea si hay URL y anon key. Sin env válido devuelve `null`
+ * (la app sigue en modo mock).
+ */
+export function getSupabase(): SupabaseClient | null {
+  if (!isSupabaseConfigured()) return null;
+  if (!client) {
+    client = createClient(env.supabase.url, env.supabase.anonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    });
+  }
+  return client;
+}
+
+/** Compat: `true` cuando no hay credenciales Supabase en env. */
+export const SUPABASE_NOT_CONNECTED = !isSupabaseConfigured();

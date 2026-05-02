@@ -1,12 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import {
-  ArrowRight,
-  BookOpen,
-  ChevronRight,
-  NotebookPen,
-  Sparkles,
-} from 'lucide-react';
+import { Link, Navigate, useLocation } from 'react-router-dom';
+import { ArrowRight, ChevronRight, NotebookPen } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useBusinessProfile } from '@/hooks/useBusinessProfile';
 import { coursesRepo } from '@/lib/courses/coursesRepo';
@@ -15,33 +9,46 @@ import { progressRepo } from '@/lib/progress/progressRepo';
 import { computeCoursePercentage } from '@/hooks/useLessonProgress';
 import { MOCK_COURSE_SLUG } from '@/data/mockClassroomData';
 import type { Note } from '@/types/notes';
-import type { PublishedCourseSummary } from '@/types/course';
-import { LoadingSkeleton } from '@/components/common/LoadingSkeleton';
+import type { UserRole } from '@/types/auth';
+import { FullScreenSpinner, LoadingSkeleton } from '@/components/common';
 import { ErrorState } from '@/components/common/ErrorState';
 import { EmptyState } from '@/components/common/EmptyState';
-import { cn } from '@/lib/utils/cn';
-
-type CourseRow = PublishedCourseSummary & {
-  progressPercent: number;
-  completedLessons: number;
-  continueLessonId: string | null;
-};
+import {
+  StudentCourseCatalog,
+  type CourseCatalogRow,
+} from '@/components/student/StudentCourseCatalog';
+import { buildLoginUrl } from '@/lib/auth/loginRedirect';
+import { isSupabaseConfigured } from '@/lib/supabase/client';
 
 interface DashboardPayload {
-  courses: CourseRow[];
+  courses: CourseCatalogRow[];
   notes: Note[];
   slugByCourseId: Record<string, string>;
 }
 
-async function loadDashboard(): Promise<DashboardPayload> {
-  const summaries = await coursesRepo.listPublishedSummaries();
+async function loadDashboard(
+  userId: string,
+  role: UserRole,
+): Promise<DashboardPayload> {
+  const summaries = await coursesRepo.listPublishedCatalogForUser({
+    userId,
+    role,
+  });
   const notes = await notesRepo.listRecent(8);
   const slugByCourseId = Object.fromEntries(
     summaries.map((c) => [c.id, c.slug]),
   );
 
-  const courses: CourseRow[] = await Promise.all(
+  const courses: CourseCatalogRow[] = await Promise.all(
     summaries.map(async (c) => {
+      if (!c.hasAccess) {
+        return {
+          ...c,
+          progressPercent: 0,
+          completedLessons: 0,
+          continueLessonId: null,
+        };
+      }
       const [progressList, lastOpened] = await Promise.all([
         progressRepo.listForCourse(c.id),
         progressRepo.getLastOpenedLessonId(c.id),
@@ -77,19 +84,36 @@ function noteHref(note: Note, slugByCourseId: Record<string, string>): string {
 }
 
 export function StudentDashboardPage() {
-  const { user } = useAuth();
+  const location = useLocation();
+  const { user, isAuthenticated, authReady } = useAuth();
   const { profile, isLoading: profileLoading } = useBusinessProfile();
 
   const q = useQuery({
-    queryKey: ['student', 'dashboard'],
-    queryFn: loadDashboard,
+    queryKey: ['student', 'dashboard', user.id, user.role],
+    queryFn: () => loadDashboard(user.id, user.role),
+    enabled: authReady && isAuthenticated,
   });
+
+  if (!authReady) {
+    return <FullScreenSpinner label="Cargando sesión…" />;
+  }
+  if (!isAuthenticated) {
+    if (isSupabaseConfigured()) {
+      return (
+        <Navigate
+          to={buildLoginUrl(location.pathname, location.search)}
+          replace
+        />
+      );
+    }
+    return <Navigate to="/" replace />;
+  }
 
   const profileIncomplete =
     profile &&
     (!profile.business_name.trim() || !profile.industry.trim());
 
-  if (q.isLoading || profileLoading) {
+  if (q.isPending || q.isLoading || profileLoading) {
     return (
       <div className="mx-auto max-w-5xl space-y-6 px-4 py-10">
         <LoadingSkeleton variant="sidebar" rows={4} />
@@ -154,75 +178,13 @@ export function StudentDashboardPage() {
       ) : null}
 
       <section className="space-y-3">
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-brand-600" aria-hidden />
-          <h2 className="text-lg font-semibold text-slate-900">Mis cursos</h2>
-        </div>
         {data.courses.length === 0 ? (
           <EmptyState
             title="Sin cursos publicados"
             description="Cuando haya cursos publicados en el catálogo aparecerán aquí."
           />
         ) : (
-          <ul className="grid gap-4 sm:grid-cols-2">
-            {data.courses.map((c) => {
-              const href =
-                c.continueLessonId != null
-                  ? `/aprender/${c.slug}/${c.continueLessonId}`
-                  : `/aprender/${c.slug}`;
-              return (
-                <li
-                  key={c.id}
-                  className="surface-panel flex flex-col overflow-hidden rounded-xl border border-slate-200"
-                >
-                  <div
-                    className={cn(
-                      'h-28 bg-slate-100 bg-cover bg-center',
-                      !c.cover_image_url && 'flex items-center justify-center',
-                    )}
-                    style={
-                      c.cover_image_url
-                        ? { backgroundImage: `url(${c.cover_image_url})` }
-                        : undefined
-                    }
-                  >
-                    {!c.cover_image_url ? (
-                      <Sparkles className="h-8 w-8 text-slate-300" aria-hidden />
-                    ) : null}
-                  </div>
-                  <div className="flex flex-1 flex-col gap-3 p-4">
-                    <div>
-                      <h3 className="font-semibold text-slate-900">{c.title}</h3>
-                      <p className="mt-1 line-clamp-2 text-xs text-slate-600">
-                        {c.short_description || 'Sin descripción corta.'}
-                      </p>
-                    </div>
-                    <div className="mt-auto space-y-2">
-                      <div className="flex justify-between text-xs text-slate-500">
-                        <span>
-                          {c.completedLessons}/{c.lessonCount} lecciones
-                        </span>
-                        <span>{c.progressPercent}%</span>
-                      </div>
-                      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-                        <div
-                          className="h-full rounded-full bg-brand-600 transition-[width]"
-                          style={{ width: `${c.progressPercent}%` }}
-                        />
-                      </div>
-                      <Link
-                        to={href}
-                        className="focus-ring inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-3 text-xs font-medium text-white shadow-sm transition hover:bg-brand-700 active:bg-brand-800"
-                      >
-                        Continuar
-                        <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
-                      </Link>
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+          <StudentCourseCatalog courses={data.courses} />
         )}
       </section>
 

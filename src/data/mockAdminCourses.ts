@@ -262,17 +262,17 @@ function buildLinearDemoStructure(): CourseStructure {
   return {
     course: {
       id: linearId,
-      title: 'Intro lineal (borrador)',
+      title: 'Intro lineal (demo)',
       slug: linearSlug,
       description:
         'Curso de demostración con estructura lineal y tres lecciones de texto.',
-      short_description: 'Demo lineal · borrador',
+      short_description: 'Demo lineal · tres lecciones publicadas',
       cover_image_url:
         'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
       category: 'General',
       level: 'beginner',
       structure_type: 'linear',
-      status: 'draft',
+      status: 'published',
       is_featured: false,
       is_free: true,
       ai_context:
@@ -280,6 +280,7 @@ function buildLinearDemoStructure(): CourseStructure {
       created_by: 'admin_demo',
       created_at: '2026-04-01T10:00:00.000Z',
       updated_at: '2026-04-20T14:00:00.000Z',
+      published_at: '2026-04-21T10:00:00.000Z',
     },
     modules: [],
     sections: [],
@@ -297,17 +298,17 @@ function buildModularDemoStructure(): CourseStructure {
   return {
     course: {
       id: modId,
-      title: 'Ventas consultivas (borrador modular)',
+      title: 'Ventas consultivas (demo modular)',
       slug: modSlug,
       description:
         'Demo con dos capítulos, secciones y una lección cada uno — para probar el temario modular.',
-      short_description: 'Demo modular · borrador',
+      short_description: 'Demo modular · dos capítulos',
       cover_image_url:
         'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1200&q=80',
       category: 'Ventas',
       level: 'intermediate',
       structure_type: 'modular',
-      status: 'draft',
+      status: 'published',
       is_featured: false,
       is_free: false,
       price: 49,
@@ -316,6 +317,7 @@ function buildModularDemoStructure(): CourseStructure {
       created_by: 'admin_demo',
       created_at: '2026-04-05T12:00:00.000Z',
       updated_at: '2026-04-22T09:30:00.000Z',
+      published_at: '2026-04-22T10:00:00.000Z',
     },
     modules: [
       {

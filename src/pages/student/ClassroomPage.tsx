@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ClassroomLayout } from '@/components/classroom/ClassroomLayout';
 import { ClassroomTopbar } from '@/components/classroom/ClassroomTopbar';
 import { CourseSidebar } from '@/components/classroom/CourseSidebar';
@@ -11,7 +12,7 @@ import { LessonNavigation } from '@/components/classroom/progress/LessonNavigati
 import { NotesPanel } from '@/components/classroom/notes/NotesPanel';
 import { AIMentorPanel } from '@/components/classroom/ai/AIMentorPanel';
 import { SelectedTextActionMenu } from '@/components/classroom/notes/SelectedTextActionMenu';
-import { ErrorState } from '@/components/common/ErrorState';
+import { ErrorState, FullScreenSpinner } from '@/components/common';
 import {
   useCourseStructure,
   useFirstLessonId,
@@ -26,22 +27,94 @@ import { useNotes } from '@/hooks/useNotes';
 import { useSelectedText } from '@/hooks/useSelectedText';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useClassroomStore } from '@/stores/useClassroomStore';
+import { useAuth } from '@/hooks/useAuth';
+import { coursesRepo } from '@/lib/courses/coursesRepo';
+import type { AppUser } from '@/types/auth';
+import { buildLoginUrl } from '@/lib/auth/loginRedirect';
+import { isSupabaseConfigured } from '@/lib/supabase/client';
 
 export function ClassroomPage() {
   const { courseSlug, lessonId } = useParams();
+  const location = useLocation();
+  const { user, isAuthenticated, authReady } = useAuth();
+
+  if (!authReady) {
+    return <FullScreenSpinner label="Cargando sesión…" />;
+  }
+  if (!isAuthenticated) {
+    if (isSupabaseConfigured()) {
+      return (
+        <Navigate
+          to={buildLoginUrl(location.pathname, location.search)}
+          replace
+        />
+      );
+    }
+    return <Navigate to="/" replace />;
+  }
+  if (!courseSlug) {
+    return <Navigate to="/" replace />;
+  }
+
+  return (
+    <ClassroomPageAuthed
+      courseSlug={courseSlug}
+      lessonId={lessonId}
+      user={user}
+    />
+  );
+}
+
+function ClassroomPageAuthed({
+  courseSlug,
+  lessonId,
+  user,
+}: {
+  courseSlug: string;
+  lessonId: string | undefined;
+  user: AppUser;
+}) {
+  const gateQuery = useQuery({
+    queryKey: ['aula-gate', user.id, user.role, courseSlug],
+    queryFn: () =>
+      coursesRepo.resolveAulaGate({
+        userId: user.id,
+        role: user.role,
+        courseSlug,
+      }),
+    enabled: true,
+  });
 
   const structureQuery = useCourseStructure(courseSlug);
   const firstLessonQuery = useFirstLessonId(
     !lessonId ? courseSlug : undefined,
   );
 
-  if (!courseSlug) {
-    return <Navigate to="/" replace />;
+  if (gateQuery.isLoading) {
+    return <FullScreenSpinner label="Cargando aula…" />;
+  }
+
+  if (gateQuery.isError) {
+    return (
+      <FullScreenError
+        onRetry={() => {
+          void gateQuery.refetch();
+        }}
+      />
+    );
+  }
+
+  if (gateQuery.data === 'forbidden') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  if (gateQuery.data === 'not_found') {
+    return <Navigate to="/404" replace />;
   }
 
   if (!lessonId) {
     if (firstLessonQuery.isLoading) {
-      return <FullScreenLoading />;
+      return <FullScreenSpinner label="Cargando aula…" />;
     }
     if (firstLessonQuery.data) {
       return (
@@ -61,7 +134,7 @@ export function ClassroomPage() {
         />
       );
     }
-    return <FullScreenLoading />;
+    return <FullScreenSpinner label="Cargando aula…" />;
   }
 
   return (
@@ -263,17 +336,6 @@ function ClassroomPageInner({
         </>
       }
     />
-  );
-}
-
-function FullScreenLoading() {
-  return (
-    <div className="flex h-[100dvh] items-center justify-center bg-slate-50">
-      <div className="flex flex-col items-center gap-3 text-slate-500">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-300 border-t-brand-600" />
-        <p className="text-sm">Cargando aula…</p>
-      </div>
-    </div>
   );
 }
 

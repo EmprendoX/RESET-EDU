@@ -1,10 +1,28 @@
-import { Link, Outlet } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { ArrowLeft, LogOut } from 'lucide-react';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { AdminTopBar } from '@/components/admin/AdminTopBar';
 import { env } from '@/config/env';
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
 export function AdminLayout() {
+  const navigate = useNavigate();
+  const [signingOut, setSigningOut] = useState(false);
+  const showSignOut = isSupabaseConfigured();
+
+  async function handleSignOut() {
+    const sb = getSupabase();
+    if (!sb) return;
+    setSigningOut(true);
+    try {
+      await sb.auth.signOut();
+      navigate('/?signedOut=1', { replace: true });
+    } finally {
+      setSigningOut(false);
+    }
+  }
+
   return (
     <div className="flex min-h-screen bg-slate-100">
       <aside className="hidden w-56 shrink-0 border-r border-slate-200 bg-white lg:flex lg:flex-col">
@@ -17,7 +35,7 @@ export function AdminLayout() {
           </p>
         </div>
         <AdminNav />
-        <div className="mt-auto border-t border-slate-100 p-3">
+        <div className="mt-auto space-y-1 border-t border-slate-100 p-3">
           <Link
             to="/"
             className="focus-ring flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
@@ -25,6 +43,17 @@ export function AdminLayout() {
             <ArrowLeft className="h-4 w-4" aria-hidden />
             Volver al sitio
           </Link>
+          {showSignOut ? (
+            <button
+              type="button"
+              disabled={signingOut}
+              onClick={() => void handleSignOut()}
+              className="focus-ring flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"
+            >
+              <LogOut className="h-4 w-4 shrink-0" aria-hidden />
+              Cerrar sesión
+            </button>
+          ) : null}
         </div>
       </aside>
 
