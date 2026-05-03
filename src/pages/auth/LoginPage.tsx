@@ -6,6 +6,7 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { env } from '@/config/env';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { getSafeNextParam } from '@/lib/auth/loginRedirect';
 import { mapAuthError } from '@/lib/auth/mapAuthError';
@@ -106,7 +107,12 @@ export function LoginPage() {
     if (!sb) return;
     setSubmitting(true);
     try {
-      const redirect = `${window.location.origin}/login`;
+      // Sin `VITE_PUBLIC_APP_URL` válido, el mail usa el mismo origen que esta pestaña (local vs prod).
+      const base = (env.publicAppOrigin ?? window.location.origin).replace(
+        /\/$/,
+        '',
+      );
+      const redirect = `${base}/login`;
       const { data, error } = await sb.auth.signUp({
         email: email.trim(),
         password,

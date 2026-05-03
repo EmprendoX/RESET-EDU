@@ -13,9 +13,10 @@ Definidas en [`.env.example`](../.env.example) y leídas en [`src/config/env.ts`
 | `VITE_SUPABASE_URL` | URL del proyecto (`https://<ref>.supabase.co`, sin `/rest/v1/`). |
 | `VITE_SUPABASE_ANON_KEY` | Clave anónima (Settings → API). |
 | `VITE_USE_SUPABASE_DATA` | `true` cuando los repos lean de Supabase (requiere esquema aplicado y datos). |
+| `VITE_PUBLIC_APP_URL` | Opcional. URL pública **https** de la app (p. ej. `https://tu-app.netlify.app`). Si está definida y es válida, el **registro** (`signUp` en [`LoginPage.tsx`](../src/pages/auth/LoginPage.tsx)) usa esta base para `emailRedirectTo` (enlace del correo de confirmación). Si no, se usa `window.location.origin` (registro desde local → link a local). Debe estar permitida en Redirect URLs de Supabase. |
 | `VITE_MOCK_USER_ROLE` | Solo sin Supabase: `student` o por defecto admin demo. |
 
-Copia `.env.example` a **`.env.local`** (no commitear). En Supabase: **Authentication → URL configuration** añade `http://localhost:5173` (y producción) en Site URL / Redirect URLs.
+Copia `.env.example` a **`.env.local`** (no commitear). En Supabase: **Authentication → URL configuration** configura **Site URL** (normalmente producción) y **Redirect URLs**: incluye `https://tu-dominio/...` y rutas de callback (p. ej. `.../login`), más `http://localhost:5173/**` si desarrollas en local. Patrones y comodines: guía oficial [Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls).
 
 ## Primer usuario administrador
 
