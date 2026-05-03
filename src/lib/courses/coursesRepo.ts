@@ -13,6 +13,13 @@ import { listEnrolledCourseIdsForUser } from '@/data/enrollmentsMockStore';
 import { randomDelay } from '@/lib/utils/time';
 import { env } from '@/config/env';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
+import {
+  fetchCourseStructureBySlug,
+  fetchFirstLessonIdFromSupabase,
+  fetchLessonByIdFromSupabase,
+  listPublishedCatalogFromSupabase,
+  resolveAulaGateFromSupabase,
+} from '@/lib/courses/coursesSupabaseRead';
 
 /**
  * Course repository (read path). Backed by the multi-course mock catalog store.
@@ -70,6 +77,11 @@ export const coursesRepo = {
     userId: string;
     role: UserRole;
   }): Promise<PublishedCatalogRow[]> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return listPublishedCatalogFromSupabase(sb, args);
+    }
+
     await randomDelay(80, 160);
     const isElevated = args.role === 'course_admin' || args.role === 'superadmin';
     const rows: PublishedCatalogRow[] = listAllStructures()
@@ -104,6 +116,11 @@ export const coursesRepo = {
     role: UserRole;
     courseSlug: string;
   }): Promise<AulaGateResult> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return resolveAulaGateFromSupabase(sb, args);
+    }
+
     await randomDelay(40, 100);
     const structure = getStructureBySlug(args.courseSlug);
     if (!structure) return 'not_found';
@@ -120,6 +137,12 @@ export const coursesRepo = {
   async getCourseStructureBySlug(
     slug: string,
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      const structure = await fetchCourseStructureBySlug(sb, slug);
+      return structure ? cloneStructure(structure) : null;
+    }
+
     await randomDelay();
     const structure = getStructureBySlug(slug);
     return structure ? cloneStructure(structure) : null;
@@ -132,6 +155,16 @@ export const coursesRepo = {
     structure: CourseStructure;
     lesson: Lesson;
   } | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      const result = await fetchLessonByIdFromSupabase(sb, args);
+      if (!result) return null;
+      return {
+        structure: cloneStructure(result.structure),
+        lesson: { ...result.lesson },
+      };
+    }
+
     await randomDelay();
     const structure = getStructureBySlug(args.courseSlug);
     if (!structure) return null;
@@ -144,6 +177,11 @@ export const coursesRepo = {
   },
 
   async getFirstLessonId(courseSlug: string): Promise<string | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return fetchFirstLessonIdFromSupabase(sb, courseSlug);
+    }
+
     await randomDelay(100, 200);
     const structure = getStructureBySlug(courseSlug);
     if (!structure || structure.lessons.length === 0) return null;

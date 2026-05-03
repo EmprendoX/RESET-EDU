@@ -17,6 +17,30 @@ import {
 import { slugify } from '@/lib/admin/slugify';
 import { validateCoursePublish } from '@/lib/admin/publishValidation';
 import { randomDelay } from '@/lib/utils/time';
+import { env } from '@/config/env';
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
+import {
+  sbAdminAddLesson,
+  sbAdminAddModule,
+  sbAdminAddSection,
+  sbAdminAssignLessonPlacement,
+  sbAdminCreateDraftCourse,
+  sbAdminDeleteCourse,
+  sbAdminDeleteLesson,
+  sbAdminDeleteModule,
+  sbAdminDeleteSection,
+  sbAdminGetStructure,
+  sbAdminListCourses,
+  sbAdminPublishCourse,
+  sbAdminReorderLessons,
+  sbAdminReorderModules,
+  sbAdminReorderSections,
+  sbAdminSetCourseStatus,
+  sbAdminUpdateCourseMetadata,
+  sbAdminUpdateLesson,
+  sbAdminUpdateModule,
+  sbAdminUpdateSection,
+} from '@/lib/courses/adminCoursesSupabase';
 
 function newEntityId(prefix: string): string {
   return `${prefix}_${Math.random().toString(36).slice(2, 11)}`;
@@ -56,6 +80,10 @@ function sortStructures(
 
 export const adminCoursesRepo = {
   async createDraftCourse(): Promise<{ courseId: string }> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminCreateDraftCourse(sb);
+    }
     await randomDelay(80, 160);
     const id = newEntityId('course');
     let slug = slugify(`borrador-${Date.now()}`);
@@ -94,6 +122,10 @@ export const adminCoursesRepo = {
   async listCourses(
     filters: AdminCourseListFilters,
   ): Promise<AdminCourseListItemMeta[]> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminListCourses(sb, filters);
+    }
     await randomDelay(60, 120);
     let rows = listAllStructures();
     if (filters.status !== 'all') {
@@ -115,11 +147,16 @@ export const adminCoursesRepo = {
       status: s.course.status,
       structure_type: s.course.structure_type,
       lessonCount: s.lessons.length,
+      created_at: s.course.created_at,
       updated_at: s.course.updated_at,
     }));
   },
 
   async getStructure(courseId: string): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminGetStructure(sb, courseId);
+    }
     await randomDelay(40, 90);
     const found = listAllStructures().find((s) => s.course.id === courseId);
     return found ?? null;
@@ -129,6 +166,10 @@ export const adminCoursesRepo = {
     courseId: string,
     values: CourseMetadataFormValues,
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminUpdateCourseMetadata(sb, courseId, values);
+    }
     await randomDelay(80, 140);
     const slug = values.slug.trim().toLowerCase();
     if (slugExists(slug, courseId)) {
@@ -165,6 +206,10 @@ export const adminCoursesRepo = {
     issues: PublishValidationIssue[];
     structure: CourseStructure | null;
   }> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminPublishCourse(sb, courseId);
+    }
     await randomDelay(100, 180);
     const current = listAllStructures().find((s) => s.course.id === courseId);
     if (!current) return { ok: false, issues: [], structure: null };
@@ -189,6 +234,10 @@ export const adminCoursesRepo = {
     courseId: string,
     status: 'draft' | 'published' | 'archived',
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminSetCourseStatus(sb, courseId, status);
+    }
     await randomDelay(60, 100);
     const now = new Date().toISOString();
     return replaceStructure(courseId, (prev) => ({
@@ -205,6 +254,10 @@ export const adminCoursesRepo = {
   },
 
   async deleteCourse(courseId: string): Promise<boolean> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminDeleteCourse(sb, courseId);
+    }
     await randomDelay(80, 120);
     const exists = listAllStructures().some((s) => s.course.id === courseId);
     if (!exists) return false;
@@ -216,6 +269,10 @@ export const adminCoursesRepo = {
     courseId: string,
     title: string,
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminAddModule(sb, courseId, title);
+    }
     await randomDelay(60, 100);
     return replaceStructure(courseId, (prev) => {
       const order =
@@ -241,6 +298,10 @@ export const adminCoursesRepo = {
     moduleId: string,
     patch: Partial<Pick<CourseModule, 'title' | 'description'>>,
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminUpdateModule(sb, courseId, moduleId, patch);
+    }
     await randomDelay(40, 80);
     return replaceStructure(courseId, (prev) => {
       const now = new Date().toISOString();
@@ -258,6 +319,10 @@ export const adminCoursesRepo = {
     courseId: string,
     moduleId: string,
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminDeleteModule(sb, courseId, moduleId);
+    }
     await randomDelay(60, 100);
     return replaceStructure(courseId, (prev) => {
       const now = new Date().toISOString();
@@ -276,6 +341,10 @@ export const adminCoursesRepo = {
     moduleId: string,
     title: string,
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminAddSection(sb, courseId, moduleId, title);
+    }
     await randomDelay(60, 100);
     return replaceStructure(courseId, (prev) => {
       const order =
@@ -304,6 +373,10 @@ export const adminCoursesRepo = {
     sectionId: string,
     patch: Partial<Pick<CourseSection, 'title' | 'description'>>,
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminUpdateSection(sb, courseId, sectionId, patch);
+    }
     await randomDelay(40, 80);
     return replaceStructure(courseId, (prev) => {
       const now = new Date().toISOString();
@@ -321,6 +394,10 @@ export const adminCoursesRepo = {
     courseId: string,
     sectionId: string,
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminDeleteSection(sb, courseId, sectionId);
+    }
     await randomDelay(60, 100);
     return replaceStructure(courseId, (prev) => {
       const now = new Date().toISOString();
@@ -340,6 +417,10 @@ export const adminCoursesRepo = {
       sectionId?: string;
     },
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminAddLesson(sb, courseId, args);
+    }
     await randomDelay(60, 120);
     return replaceStructure(courseId, (prev) => {
       const order =
@@ -373,6 +454,10 @@ export const adminCoursesRepo = {
     lessonId: string,
     values: LessonFormValues,
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminUpdateLesson(sb, courseId, lessonId, values);
+    }
     await randomDelay(60, 120);
     return replaceStructure(courseId, (prev) => {
       const now = new Date().toISOString();
@@ -406,6 +491,10 @@ export const adminCoursesRepo = {
     courseId: string,
     lessonId: string,
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminDeleteLesson(sb, courseId, lessonId);
+    }
     await randomDelay(60, 100);
     return replaceStructure(courseId, (prev) => {
       const now = new Date().toISOString();
@@ -421,6 +510,10 @@ export const adminCoursesRepo = {
     courseId: string,
     orderedLessonIds: string[],
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminReorderLessons(sb, courseId, orderedLessonIds);
+    }
     await randomDelay(40, 80);
     return replaceStructure(courseId, (prev) => {
       const now = new Date().toISOString();
@@ -442,6 +535,10 @@ export const adminCoursesRepo = {
     courseId: string,
     orderedModuleIds: string[],
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminReorderModules(sb, courseId, orderedModuleIds);
+    }
     await randomDelay(40, 80);
     return replaceStructure(courseId, (prev) => {
       const now = new Date().toISOString();
@@ -464,6 +561,10 @@ export const adminCoursesRepo = {
     moduleId: string,
     orderedSectionIds: string[],
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminReorderSections(sb, courseId, moduleId, orderedSectionIds);
+    }
     await randomDelay(40, 80);
     return replaceStructure(courseId, (prev) => {
       const now = new Date().toISOString();
@@ -487,6 +588,10 @@ export const adminCoursesRepo = {
     lessonId: string,
     placement: { moduleId?: string; sectionId?: string },
   ): Promise<CourseStructure | null> {
+    const sb = getSupabase();
+    if (isSupabaseConfigured() && env.useSupabaseData && sb) {
+      return sbAdminAssignLessonPlacement(sb, courseId, lessonId, placement);
+    }
     await randomDelay(40, 80);
     return replaceStructure(courseId, (prev) => {
       const now = new Date().toISOString();

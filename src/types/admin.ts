@@ -62,5 +62,6 @@ export interface AdminCourseListItemMeta {
   status: CourseStatus;
   structure_type: StructureType;
   lessonCount: number;
+  created_at: string;
   updated_at: string;
 }

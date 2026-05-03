@@ -1,8 +1,13 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { CourseStructure } from '@/types/course';
 import type { PublishValidationIssue } from '@/types/admin';
 import { slugExists } from '@/data/courseCatalogMockStore';
+import { isSlugTaken } from '@/lib/courses/coursesSupabaseRead';
 
-export function validateCoursePublish(structure: CourseStructure): PublishValidationIssue[] {
+/** Reglas de publicación sin comprobar slug duplicado (mock o remoto). */
+export function validateCoursePublishBase(
+  structure: CourseStructure,
+): PublishValidationIssue[] {
   const issues: PublishValidationIssue[] = [];
   const { course, modules, sections, lessons } = structure;
 
@@ -18,12 +23,6 @@ export function validateCoursePublish(structure: CourseStructure): PublishValida
     issues.push({
       code: 'slug_required',
       message: 'El slug es obligatorio.',
-      severity: 'error',
-    });
-  } else if (slugExists(course.slug, course.id)) {
-    issues.push({
-      code: 'slug_duplicate',
-      message: 'Ya existe otro curso con este slug.',
       severity: 'error',
     });
   }
@@ -79,5 +78,39 @@ export function validateCoursePublish(structure: CourseStructure): PublishValida
     });
   }
 
+  return issues;
+}
+
+/** Validación síncrona (mock): slug duplicado vía `courseCatalogMockStore`. */
+export function validateCoursePublish(structure: CourseStructure): PublishValidationIssue[] {
+  const issues = validateCoursePublishBase(structure);
+  const { course } = structure;
+  if (course.slug.trim() && slugExists(course.slug, course.id)) {
+    issues.push({
+      code: 'slug_duplicate',
+      message: 'Ya existe otro curso con este slug.',
+      severity: 'error',
+    });
+  }
+  return issues;
+}
+
+/** Validación con slug duplicado contra Supabase (excluye el curso actual). */
+export async function validateCoursePublishSupabase(
+  sb: SupabaseClient,
+  structure: CourseStructure,
+): Promise<PublishValidationIssue[]> {
+  const issues = validateCoursePublishBase(structure);
+  const { course } = structure;
+  if (course.slug.trim()) {
+    const taken = await isSlugTaken(sb, course.slug, course.id);
+    if (taken) {
+      issues.push({
+        code: 'slug_duplicate',
+        message: 'Ya existe otro curso con este slug.',
+        severity: 'error',
+      });
+    }
+  }
   return issues;
 }

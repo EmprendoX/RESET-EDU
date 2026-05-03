@@ -1,18 +1,59 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CourseStructure } from '@/types/course';
 import { Button } from '@/components/ui/Button';
 import { adminCoursesRepo } from '@/lib/courses/adminCoursesRepo';
-import { validateCoursePublish } from '@/lib/admin/publishValidation';
+import {
+  validateCoursePublish,
+  validateCoursePublishSupabase,
+} from '@/lib/admin/publishValidation';
 import { queryKeys } from '@/hooks/queryKeys';
+import { env } from '@/config/env';
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
 interface Props {
   courseId: string;
   structure: CourseStructure | null | undefined;
 }
 
+function publishPreviewFingerprint(s: CourseStructure): string {
+  return [
+    s.course.title,
+    s.course.slug,
+    s.course.short_description,
+    s.course.structure_type,
+    s.modules.map((m) => `${m.id}:${m.title}`).join('|'),
+    s.sections.map((sec) => `${sec.id}:${sec.module_id}`).join('|'),
+    s.lessons
+      .map((l) =>
+        [l.id, l.module_id ?? '', l.section_id ?? '', l.title].join(':'),
+      )
+      .join('|'),
+  ].join('¦');
+}
+
 export function PublishBar({ courseId, structure }: Props) {
   const qc = useQueryClient();
-  const previewIssues = structure ? validateCoursePublish(structure) : [];
+  const sb = getSupabase();
+  const useRemote = Boolean(
+    isSupabaseConfigured() && env.useSupabaseData && sb,
+  );
+  const previewQuery = useQuery({
+    queryKey: [
+      ...queryKeys.admin.course(courseId),
+      'publish-preview',
+      useRemote,
+      structure ? publishPreviewFingerprint(structure) : '',
+    ],
+    queryFn: async () => {
+      if (!structure) return [];
+      if (useRemote && sb) {
+        return validateCoursePublishSupabase(sb, structure);
+      }
+      return validateCoursePublish(structure);
+    },
+    enabled: Boolean(structure),
+  });
+  const previewIssues = previewQuery.data ?? [];
   const errors = previewIssues.filter((i) => i.severity === 'error');
 
   const publishMutation = useMutation({
@@ -47,7 +88,12 @@ export function PublishBar({ courseId, structure }: Props) {
         <Button
           size="sm"
           loading={publishMutation.isPending}
-          disabled={!structure || errors.length > 0}
+          disabled={
+            !structure ||
+            previewQuery.isFetching ||
+            previewQuery.isPending ||
+            errors.length > 0
+          }
           onClick={() => publishMutation.mutate()}
         >
           Publicar curso
@@ -78,9 +124,13 @@ export function PublishBar({ courseId, structure }: Props) {
             </li>
           ))}
         </ul>
+      ) : previewQuery.isFetching || previewQuery.isPending ? (
+        <p className="text-xs text-slate-500">Comprobando requisitos…</p>
       ) : (
         <p className="text-xs text-slate-500">
-          Listo para publicar desde el punto de vista del mock (sin backend).
+          {useRemote
+            ? 'Listo para publicar según las reglas del catálogo.'
+            : 'Listo para publicar desde el punto de vista del mock (sin backend).'}
         </p>
       )}
       {publishMutation.isError ? (
