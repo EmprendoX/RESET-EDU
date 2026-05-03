@@ -18,6 +18,38 @@ Definidas en [`.env.example`](../.env.example) y leídas en [`src/config/env.ts`
 
 Copia `.env.example` a **`.env.local`** (no commitear). En Supabase: **Authentication → URL configuration** configura **Site URL** (normalmente producción) y **Redirect URLs**: incluye `https://tu-dominio/...` y rutas de callback (p. ej. `.../login`), más `http://localhost:5173/**` si desarrollas en local. Patrones y comodines: guía oficial [Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls).
 
+## Confirmación de email: enlace va a localhost (`ERR_CONNECTION_REFUSED`)
+
+El `emailRedirectTo` del registro sale de `VITE_PUBLIC_APP_URL` (https válida) o de `window.location.origin` + `/login` (ver [`LoginPage.tsx`](../src/pages/auth/LoginPage.tsx)). Si al hacer clic en el correo el navegador intenta abrir **localhost** y falla, revisa en este orden (los enlaces **viejos** del correo no cambian; pide confirmación de nuevo tras corregir):
+
+### 1. Supabase (obligatorio)
+
+En el **mismo proyecto** que tus `VITE_SUPABASE_*`:
+
+1. **Authentication → URL Configuration → Site URL**: debe ser la URL pública de la app en producción, p. ej. `https://tu-app.netlify.app`. Si sigue en `http://localhost:5173`, muchos flujos de Auth redirigen ahí tras verificar el token.
+2. **Redirect URLs**: añade explícitamente (ajusta el dominio):
+   - `https://tu-app.netlify.app/login`
+   - y/o un patrón permitido por la guía, p. ej. `https://tu-app.netlify.app/**`
+   - Si desarrollas en local contra este proyecto: `http://localhost:5173/login` y `http://localhost:5173/**`
+3. Guarda. Vuelve a **registrarte** o usa **reenviar confirmación** para generar un enlace nuevo.
+
+Si `redirect_to` del enlace no está permitido, Supabase puede sustituir por **Site URL**; por eso Site URL en localhost rompe el flujo en producción.
+
+### 2. Netlify (build)
+
+1. En el sitio: **Site configuration → Environment variables** (o **Build & deploy → Environment**), añade `VITE_PUBLIC_APP_URL=https://tu-app.netlify.app` (misma base que en Redirect URLs, sin path salvo la que uses en la env; el código añade `/login`).
+2. **Redeploy** el sitio: Vite inyecta las `VITE_*` en **build time**; un cambio de variable sin nuevo deploy no actualiza el bundle.
+
+### 3. Prueba manual
+
+1. Abre la app en **producción**: `https://tu-dominio/login` (no `localhost`).
+2. Crea cuenta o pide nuevo correo de confirmación.
+3. Abre el enlace desde el mail; debe volver a `https://tu-dominio/login` (o la ruta que Supabase añada con tokens en hash/query).
+
+### 4. Desarrollo local
+
+Si ejecutas `npm run dev` y te registras en `http://localhost:5173`, el correo llevará **localhost** salvo que en `.env.local` definas `VITE_PUBLIC_APP_URL=https://tu-dominio` (y esa URL esté en Redirect URLs). Es el comportamiento esperado del código.
+
 ## Primer usuario administrador
 
 1. Con `VITE_SUPABASE_*` configurados, regístrate en `/login` (modo registro; ver `src/pages/auth/LoginPage.tsx`).

@@ -127,9 +127,16 @@ export function LoginPage() {
         navigate(targetPath, { replace: true });
         return;
       }
-      setInfoMessage(
-        'Revisa tu correo para confirmar tu cuenta antes de iniciar sesión.',
-      );
+      let confirmMsg =
+        'Revisa tu correo para confirmar tu cuenta antes de iniciar sesión.';
+      if (
+        import.meta.env.DEV &&
+        (base.includes('localhost') || base.includes('127.0.0.1'))
+      ) {
+        confirmMsg +=
+          ' El enlace del correo apuntará a este origen (localhost) salvo que definas VITE_PUBLIC_APP_URL en .env.local con tu URL https de producción y esté permitida en Supabase → Redirect URLs.';
+      }
+      setInfoMessage(confirmMsg);
       setPassword('');
     } catch (err) {
       setErrorMessage(mapAuthError(err));
