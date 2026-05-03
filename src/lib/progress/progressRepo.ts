@@ -5,6 +5,16 @@ import type {
 import { MOCK_USER_ID } from '@/data/mockBusinessProfile';
 import { demoStorage } from '@/lib/utils/storage';
 import { nowIso, randomDelay, uid } from '@/lib/utils/time';
+import { env } from '@/config/env';
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
+import {
+  sbProgressGetForLesson,
+  sbProgressGetLastOpenedLessonId,
+  sbProgressListForCourse,
+  sbProgressMarkCompleted,
+  sbProgressMarkStarted,
+  sbProgressResetLesson,
+} from '@/lib/progress/progressSupabase';
 
 const STORE_KEY = 'progress:v1';
 
@@ -42,8 +52,20 @@ function makeProgress(
   };
 }
 
+function isProgressRemote(): boolean {
+  const sb = getSupabase();
+  return Boolean(
+    isSupabaseConfigured() && env.useSupabaseData && sb,
+  );
+}
+
 export const progressRepo = {
   async listForCourse(courseId: string): Promise<LessonProgress[]> {
+    const sb = getSupabase();
+    if (isProgressRemote() && sb) {
+      return sbProgressListForCourse(sb, courseId);
+    }
+
     await randomDelay(100, 220);
     const map = loadAll();
     return Object.values(map).filter((p) => p.course_id === courseId);
@@ -54,6 +76,11 @@ export const progressRepo = {
    * Useful when navigating to `/aprender/:slug` without a lessonId.
    */
   async getLastOpenedLessonId(courseId: string): Promise<string | null> {
+    const sb = getSupabase();
+    if (isProgressRemote() && sb) {
+      return sbProgressGetLastOpenedLessonId(sb, courseId);
+    }
+
     const map = loadAll();
     const entries = Object.values(map).filter((p) => p.course_id === courseId);
     if (entries.length === 0) return null;
@@ -67,6 +94,11 @@ export const progressRepo = {
     courseId: string;
     lessonId: string;
   }): Promise<LessonProgress | null> {
+    const sb = getSupabase();
+    if (isProgressRemote() && sb) {
+      return sbProgressGetForLesson(sb, args.courseId, args.lessonId);
+    }
+
     await randomDelay(80, 180);
     const map = loadAll();
     return map[progressKey(args.courseId, args.lessonId)] ?? null;
@@ -76,6 +108,11 @@ export const progressRepo = {
     courseId: string;
     lessonId: string;
   }): Promise<LessonProgress> {
+    const sb = getSupabase();
+    if (isProgressRemote() && sb) {
+      return sbProgressMarkStarted(sb, args.courseId, args.lessonId);
+    }
+
     await randomDelay(120, 220);
     const map = loadAll();
     const k = progressKey(args.courseId, args.lessonId);
@@ -105,6 +142,11 @@ export const progressRepo = {
     courseId: string;
     lessonId: string;
   }): Promise<LessonProgress> {
+    const sb = getSupabase();
+    if (isProgressRemote() && sb) {
+      return sbProgressMarkCompleted(sb, args.courseId, args.lessonId);
+    }
+
     await randomDelay(120, 250);
     const map = loadAll();
     const k = progressKey(args.courseId, args.lessonId);
@@ -124,6 +166,12 @@ export const progressRepo = {
     courseId: string;
     lessonId: string;
   }): Promise<void> {
+    const sb = getSupabase();
+    if (isProgressRemote() && sb) {
+      await sbProgressResetLesson(sb, args.courseId, args.lessonId);
+      return;
+    }
+
     await randomDelay(80, 150);
     const map = loadAll();
     delete map[progressKey(args.courseId, args.lessonId)];

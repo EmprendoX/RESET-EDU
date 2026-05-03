@@ -7,6 +7,16 @@ import { mockNotes } from '@/data/mockNotes';
 import { MOCK_USER_ID } from '@/data/mockBusinessProfile';
 import { demoStorage } from '@/lib/utils/storage';
 import { nowIso, randomDelay, uid } from '@/lib/utils/time';
+import { env } from '@/config/env';
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
+import {
+  sbNotesCreate,
+  sbNotesList,
+  sbNotesListAllForCourse,
+  sbNotesListRecent,
+  sbNotesRemove,
+  sbNotesUpdate,
+} from '@/lib/notes/notesSupabase';
 
 const STORE_KEY = 'notes:v1';
 
@@ -18,8 +28,18 @@ function saveAll(notes: Note[]): void {
   demoStorage.set(STORE_KEY, notes);
 }
 
+function isNotesRemote(): boolean {
+  const sb = getSupabase();
+  return Boolean(isSupabaseConfigured() && env.useSupabaseData && sb);
+}
+
 export const notesRepo = {
   async list(args: { courseId: string; lessonId?: string }): Promise<Note[]> {
+    const sb = getSupabase();
+    if (isNotesRemote() && sb) {
+      return sbNotesList(sb, args);
+    }
+
     await randomDelay();
     const notes = loadAll().filter((n) => n.course_id === args.courseId);
     const filtered = args.lessonId
@@ -32,6 +52,11 @@ export const notesRepo = {
   },
 
   async listAllForCourse(courseId: string): Promise<Note[]> {
+    const sb = getSupabase();
+    if (isNotesRemote() && sb) {
+      return sbNotesListAllForCourse(sb, courseId);
+    }
+
     await randomDelay();
     return loadAll()
       .filter((n) => n.course_id === courseId)
@@ -39,6 +64,11 @@ export const notesRepo = {
   },
 
   async listRecent(limit: number): Promise<Note[]> {
+    const sb = getSupabase();
+    if (isNotesRemote() && sb) {
+      return sbNotesListRecent(sb, limit);
+    }
+
     await randomDelay();
     return [...loadAll()]
       .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
@@ -46,6 +76,11 @@ export const notesRepo = {
   },
 
   async create(input: CreateNoteInput): Promise<Note> {
+    const sb = getSupabase();
+    if (isNotesRemote() && sb) {
+      return sbNotesCreate(sb, input);
+    }
+
     await randomDelay(150, 350);
     const all = loadAll();
     const created: Note = {
@@ -67,6 +102,11 @@ export const notesRepo = {
   },
 
   async update(input: UpdateNoteInput): Promise<Note> {
+    const sb = getSupabase();
+    if (isNotesRemote() && sb) {
+      return sbNotesUpdate(sb, input);
+    }
+
     await randomDelay(120, 300);
     const all = loadAll();
     const idx = all.findIndex((n) => n.id === input.id);
@@ -86,12 +126,33 @@ export const notesRepo = {
   },
 
   async remove(id: string): Promise<void> {
+    const sb = getSupabase();
+    if (isNotesRemote() && sb) {
+      await sbNotesRemove(sb, id);
+      return;
+    }
+
     await randomDelay(120, 250);
     const all = loadAll();
     saveAll(all.filter((n) => n.id !== id));
   },
 
   async togglePin(id: string): Promise<Note> {
+    const sb = getSupabase();
+    if (isNotesRemote() && sb) {
+      const { data, error } = await sb
+        .from('notes')
+        .select('is_pinned')
+        .eq('id', id)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data || typeof data !== 'object' || !('is_pinned' in data)) {
+        throw new Error(`Note ${id} not found`);
+      }
+      const pinned = Boolean((data as { is_pinned: boolean }).is_pinned);
+      return sbNotesUpdate(sb, { id, is_pinned: !pinned });
+    }
+
     const all = loadAll();
     const target = all.find((n) => n.id === id);
     if (!target) throw new Error(`Note ${id} not found`);
@@ -100,8 +161,10 @@ export const notesRepo = {
 
   /**
    * Test helper to wipe local state in the demo. Not used in production.
+   * Con datos en Supabase no borra filas remotas.
    */
   resetDemo(): void {
+    if (isNotesRemote()) return;
     demoStorage.remove(STORE_KEY);
   },
 };

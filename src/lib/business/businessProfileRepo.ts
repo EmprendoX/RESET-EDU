@@ -9,11 +9,27 @@ import {
   businessProfileFormSchema,
   type BusinessProfileFormInput,
 } from '@/lib/business/businessProfileSchema';
+import { env } from '@/config/env';
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
+import {
+  sbBusinessProfileGet,
+  sbBusinessProfileUpsert,
+} from '@/lib/business/businessProfileSupabase';
 
 const STORE_KEY = 'business-profile:v1';
 
+function isBusinessProfileRemote(): boolean {
+  const sb = getSupabase();
+  return Boolean(isSupabaseConfigured() && env.useSupabaseData && sb);
+}
+
 export const businessProfileRepo = {
   async get(): Promise<StudentBusinessProfile> {
+    const sb = getSupabase();
+    if (isBusinessProfileRemote() && sb) {
+      return sbBusinessProfileGet(sb);
+    }
+
     await randomDelay(80, 160);
     const stored = demoStorage.get<StudentBusinessProfile | null>(
       STORE_KEY,
@@ -26,6 +42,12 @@ export const businessProfileRepo = {
   },
 
   async upsert(input: BusinessProfileFormInput): Promise<StudentBusinessProfile> {
+    const sb = getSupabase();
+    if (isBusinessProfileRemote() && sb) {
+      const parsed = businessProfileFormSchema.parse(input);
+      return sbBusinessProfileUpsert(sb, parsed);
+    }
+
     await randomDelay(120, 280);
     const parsed = businessProfileFormSchema.parse(input);
     const base = await businessProfileRepo.get();
@@ -42,8 +64,11 @@ export const businessProfileRepo = {
     return merged;
   },
 
-  /** Solo para tests / reset demo. */
+  /**
+   * Solo para tests / reset demo. Con Supabase activo no borra datos remotos.
+   */
   resetDemo(): void {
+    if (isBusinessProfileRemote()) return;
     demoStorage.remove(STORE_KEY);
   },
 };

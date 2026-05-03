@@ -62,13 +62,19 @@ Con rol **course_admin** en `profiles`: CRUD de borradores y `lesson_assets` seg
 | `course_modules` | `CourseModule[]` | Igual vía estructura | `addModule`, `updateModule`, `deleteModule`, `reorderModules` |
 | `course_sections` | `CourseSection[]` | Igual | `addSection`, `updateSection`, `deleteSection`, `reorderSections` |
 | `lessons` | `Lesson[]` | `getLessonById`, `getFirstLessonId` | `addLesson`, `updateLesson`, `deleteLesson`, `reorderLessons`, `assignLessonPlacement` |
+| `lesson_progress` | `localStorage` (demo) si no hay Supabase datos | `progressRepo` → [`progressSupabase.ts`](../src/lib/progress/progressSupabase.ts) con sesión | — |
+| `notes` | `localStorage` (demo) si no hay Supabase datos | `notesRepo` → [`notesSupabase.ts`](../src/lib/notes/notesSupabase.ts) con sesión | — |
+| `student_business_profiles` | `localStorage` (demo) si no hay Supabase datos | `businessProfileRepo` → [`businessProfileSupabase.ts`](../src/lib/business/businessProfileSupabase.ts) con sesión | — |
 | `lesson_assets` | Opcional; hoy URLs en `Lesson` (`pdf_url`, `file_url`) | RLS: misma lógica que lección (preview o acceso) | Admin; Storage en épica siguiente |
 | Storage (PDF/PPT) | `adminMediaMockStore` + URLs blob | — | Reemplazar por upload Supabase + `storage_path` en `lesson_assets` |
+
+Con `VITE_USE_SUPABASE_DATA=true`, URL/anon key válidos y usuario autenticado (`auth.getUser()`), esos tres repos persisten en Postgres con RLS; sin sesión las lecturas devuelven vacío o defaults y las escrituras fallan con error claro.
 
 ## Contratos a preservar
 
 - **`coursesRepo`** (solo lectura): `getCourseStructureBySlug`, `getLessonById`, `getFirstLessonId`.
 - **`adminCoursesRepo`**: métodos ya definidos en [`src/lib/courses/adminCoursesRepo.ts`](../src/lib/courses/adminCoursesRepo.ts).
+- **`progressRepo`**, **`notesRepo`**, **`businessProfileRepo`**: mismas firmas públicas; rama Supabase en [`sessionUser.ts`](../src/lib/supabase/sessionUser.ts) + `*Supabase.ts` asociados.
 - **Shape del Aula**: `CourseStructure` (`course`, `modules`, `sections`, `lessons`) debe seguir siendo lo que consume [`CourseSidebar`](../src/components/classroom/CourseSidebar.tsx) y los viewers.
 
 ## Auth y RLS
