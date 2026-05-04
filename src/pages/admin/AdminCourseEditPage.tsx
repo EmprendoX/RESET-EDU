@@ -48,7 +48,7 @@ export function AdminCourseEditPage() {
     return (
       <ErrorState
         title="Curso no encontrado"
-        description="El ID no existe en el catálogo mock."
+        description="El ID no existe en el catálogo."
         onRetry={() => q.refetch()}
       />
     );

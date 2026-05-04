@@ -3,10 +3,8 @@ import { Link, Navigate, useLocation } from 'react-router-dom';
 import { ArrowRight, ChevronRight, NotebookPen } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useBusinessProfile } from '@/hooks/useBusinessProfile';
-import { coursesRepo } from '@/lib/courses/coursesRepo';
+import { loadCourseCatalogRows } from '@/lib/courses/loadCourseCatalogRows';
 import { notesRepo } from '@/lib/notes/notesRepo';
-import { progressRepo } from '@/lib/progress/progressRepo';
-import { computeCoursePercentage } from '@/hooks/useLessonProgress';
 import { MOCK_COURSE_SLUG } from '@/data/mockClassroomData';
 import type { Note } from '@/types/notes';
 import type { UserRole } from '@/types/auth';
@@ -30,46 +28,10 @@ async function loadDashboard(
   userId: string,
   role: UserRole,
 ): Promise<DashboardPayload> {
-  const summaries = await coursesRepo.listPublishedCatalogForUser({
-    userId,
-    role,
-  });
+  const courses = await loadCourseCatalogRows(userId, role);
   const notes = await notesRepo.listRecent(8);
   const slugByCourseId = Object.fromEntries(
-    summaries.map((c) => [c.id, c.slug]),
-  );
-
-  const courses: CourseCatalogRow[] = await Promise.all(
-    summaries.map(async (c) => {
-      if (!c.hasAccess) {
-        return {
-          ...c,
-          progressPercent: 0,
-          completedLessons: 0,
-          continueLessonId: null,
-        };
-      }
-      const [progressList, lastOpened] = await Promise.all([
-        progressRepo.listForCourse(c.id),
-        progressRepo.getLastOpenedLessonId(c.id),
-      ]);
-      const completed = progressList.filter((p) => p.status === 'completed')
-        .length;
-      const progressPercent = computeCoursePercentage(
-        c.lessonCount,
-        completed,
-      );
-      let continueLessonId = lastOpened;
-      if (!continueLessonId) {
-        continueLessonId = await coursesRepo.getFirstLessonId(c.slug);
-      }
-      return {
-        ...c,
-        progressPercent,
-        completedLessons: completed,
-        continueLessonId,
-      };
-    }),
+    courses.map((c) => [c.id, c.slug]),
   );
 
   return { courses, notes, slugByCourseId };
@@ -139,6 +101,10 @@ export function StudentDashboardPage() {
       <nav className="flex flex-wrap items-center gap-1 text-xs text-slate-500">
         <Link to="/" className="hover:text-slate-800">
           Inicio
+        </Link>
+        <ChevronRight className="h-3 w-3" aria-hidden />
+        <Link to="/cursos" className="hover:text-slate-800">
+          Cursos
         </Link>
         <ChevronRight className="h-3 w-3" aria-hidden />
         <span className="text-slate-800">Dashboard</span>

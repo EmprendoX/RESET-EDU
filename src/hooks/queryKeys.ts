@@ -30,5 +30,10 @@ export const queryKeys = {
     /** Prefix for all course lists (invalidate with this key). */
     courses: () => ['admin', 'courses'] as const,
     course: (courseId: string) => ['admin', 'course', courseId] as const,
+    enrollments: () => ['admin', 'enrollments'] as const,
+  },
+  catalog: {
+    rowsForUser: (userId: string, role: string) =>
+      ['catalog', 'rows', userId, role] as const,
   },
 };

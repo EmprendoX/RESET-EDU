@@ -23,8 +23,8 @@ export function getAdminSectionTitle(pathname: string): string {
   if (pathname === '/admin/media') {
     return 'Biblioteca de archivos';
   }
-  if (pathname === '/admin/usuarios') {
-    return 'Usuarios';
+  if (pathname === '/admin/matriculas') {
+    return 'Matrículas';
   }
   if (pathname === '/admin/reportes') {
     return 'Reportes';

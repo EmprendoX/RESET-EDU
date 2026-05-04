@@ -88,8 +88,8 @@ function CourseCatalogCard({ row }: { row: CourseCatalogRow }) {
             </Link>
           </div>
         ) : (
-          <div className="mt-auto">
-            <p className="mb-3 text-xs leading-relaxed text-slate-500">
+          <div className="mt-auto space-y-2">
+            <p className="mb-1 text-xs leading-relaxed text-slate-500">
               Este curso no está incluido en tu plan. Cuando tengas acceso podrás
               estudiarlo aquí mismo.
             </p>
@@ -99,6 +99,12 @@ function CourseCatalogCard({ row }: { row: CourseCatalogRow }) {
             >
               Bloqueado
             </span>
+            <Link
+              to={`/cursos/${row.slug}`}
+              className="focus-ring inline-flex h-9 w-full items-center justify-center rounded-xl border border-brand-200 bg-white px-3 text-xs font-semibold text-brand-800 shadow-sm transition hover:bg-brand-50"
+            >
+              Ver ficha pública
+            </Link>
           </div>
         )}
       </div>

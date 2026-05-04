@@ -32,9 +32,9 @@ export function AdminNav() {
         <FileImage className="h-4 w-4 shrink-0" aria-hidden />
         Media
       </NavLink>
-      <NavLink to="/admin/usuarios" className={linkClass}>
+      <NavLink to="/admin/matriculas" className={linkClass}>
         <Users className="h-4 w-4 shrink-0" aria-hidden />
-        Usuarios
+        Matrículas
       </NavLink>
       <NavLink to="/admin/reportes" className={linkClass}>
         <BarChart3 className="h-4 w-4 shrink-0" aria-hidden />

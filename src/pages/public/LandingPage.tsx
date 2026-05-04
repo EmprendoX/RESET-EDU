@@ -72,6 +72,11 @@ export function LandingPage() {
                 </span>
               </p>
               <div className="flex flex-wrap justify-center gap-2">
+                <Link to="/cursos">
+                  <Button size="md" variant="outline">
+                    Catálogo de cursos
+                  </Button>
+                </Link>
                 <Link to="/dashboard">
                   <Button size="md" variant="primary">
                     Dashboard
@@ -90,6 +95,11 @@ export function LandingPage() {
             </>
           ) : (
             <div className="flex flex-wrap justify-center gap-2">
+              <Link to="/cursos">
+                <Button size="lg" variant="outline">
+                  Ver cursos
+                </Button>
+              </Link>
               <Link to="/login">
                 <Button size="lg" variant="primary">
                   Entrar
@@ -110,6 +120,12 @@ export function LandingPage() {
           <Button size="lg" rightIcon={<ArrowRight className="h-4 w-4" />}>
             Abrir Aula de demo
           </Button>
+        </Link>
+        <Link
+          to="/cursos"
+          className="focus-ring text-sm font-medium text-slate-600 underline-offset-4 hover:underline"
+        >
+          Catálogo
         </Link>
         <Link
           to="/dashboard"
