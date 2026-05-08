@@ -25,7 +25,7 @@ import { queryKeys } from '@/hooks/queryKeys';
 import { LoadingSkeleton } from '@/components/common/LoadingSkeleton';
 import { ErrorState } from '@/components/common/ErrorState';
 import { LessonAulaPreviewPanel } from '@/components/admin/LessonAulaPreviewPanel';
-import { LessonAssetUploaderMock } from '@/components/admin/LessonAssetUploaderMock';
+import { LessonAssetUploader } from '@/components/admin/LessonAssetUploader';
 
 interface Props {
   courseId: string;
@@ -47,6 +47,7 @@ export function LessonEditorPanel({ courseId, lessonId }: Props) {
     reset,
     watch,
     setValue,
+    getValues,
     formState: { isSubmitting },
   } = useForm<LessonFormValues>({ defaultValues: EMPTY_LESSON_FORM });
 
@@ -247,7 +248,12 @@ export function LessonEditorPanel({ courseId, lessonId }: Props) {
           />
         </div>
 
-        <LessonAssetUploaderMock setValue={setValue} />
+        <LessonAssetUploader
+          courseId={courseId}
+          lessonId={lessonId}
+          setValue={setValue}
+          getValues={getValues}
+        />
       </div>
 
       {isModular ? (
