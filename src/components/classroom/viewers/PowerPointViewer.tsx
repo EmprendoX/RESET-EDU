@@ -25,6 +25,6 @@ function isPdfUrl(url: string | undefined): boolean {
     const u = new URL(url);
     return u.pathname.toLowerCase().endsWith('.pdf');
   } catch {
-    return false;
+    return url.toLowerCase().endsWith('.pdf');
   }
 }
