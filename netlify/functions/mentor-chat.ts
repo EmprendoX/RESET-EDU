@@ -48,7 +48,10 @@ function json(
 }
 
 function splitSuggestedTitle(text: string): { answer: string; title?: string } {
-  const re = /\nSUGGESTED_NOTE_TITLE:\s*(.+)$/im;
+  // Aceptamos newline o espacio antes (los modelos a veces ponen la
+  // directiva en la misma línea final). Captura non-greedy hasta fin del
+  // texto.
+  const re = /\s*SUGGESTED_NOTE_TITLE:\s*(.+?)\s*$/i;
   const m = text.match(re);
   if (!m) return { answer: text.trim() };
   const title = m[1].trim();
