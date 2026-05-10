@@ -78,8 +78,11 @@ export function useAIMentor({ courseId, lessonId, fileContext }: Args) {
         created_at: nowIso(),
       };
 
+      // Optimistic: el mensaje del alumno se muestra de inmediato en ambos
+      // modos. En mock también lo persistimos local; en api lo persiste el
+      // backend al recibirlo (mentor-chat.ts) y se refresca al refetch.
+      setMessages((prev) => [...prev, userMessage]);
       if (!useApi) {
-        setMessages((prev) => [...prev, userMessage]);
         await threadsRepo.appendMessage(threadId, {
           role: 'user',
           content: params.userMessage,
@@ -143,6 +146,13 @@ export function useAIMentor({ courseId, lessonId, fileContext }: Args) {
     },
   });
 
+  const sendError =
+    sendMutation.error instanceof Error
+      ? sendMutation.error.message
+      : sendMutation.error
+        ? 'No se pudo enviar el mensaje al mentor.'
+        : null;
+
   return {
     thread: threadQuery.data,
     messages: messagesQuery.data ?? [],
@@ -154,6 +164,8 @@ export function useAIMentor({ courseId, lessonId, fileContext }: Args) {
       mode?: MentorMode;
       selectedText?: string;
     }) => sendMutation.mutateAsync(params),
+    sendError,
+    resetSendError: () => sendMutation.reset(),
     lastSuggestedTitle,
   };
 }

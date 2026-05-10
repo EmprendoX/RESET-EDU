@@ -11,3 +11,10 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+
+# Local: `netlify dev` arranca Vite y proxy en :8888 sirviendo /.netlify/functions/*
+[dev]
+  command = "npm run dev"
+  framework = "vite"
+  targetPort = 5173
+  port = 8888

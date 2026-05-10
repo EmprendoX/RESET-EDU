@@ -16,33 +16,55 @@ async function postMentorChat(
   request: MentorRequest,
   accessToken: string,
 ): Promise<MentorResponse> {
-  const res = await fetch(env.mentor.endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({
-      courseId: request.courseId,
-      lessonId: request.lessonId,
-      threadId: request.threadId,
-      userMessage: request.userMessage,
-      mentorMode: request.mentorMode,
-      selectedText: request.selectedText,
-      currentFileContext: request.currentFileContext,
-    }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(env.mentor.endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        courseId: request.courseId,
+        lessonId: request.lessonId,
+        threadId: request.threadId,
+        userMessage: request.userMessage,
+        mentorMode: request.mentorMode,
+        selectedText: request.selectedText,
+        currentFileContext: request.currentFileContext,
+      }),
+    });
+  } catch (e) {
+    throw new Error(
+      'No se pudo conectar con el mentor. Revisa tu conexión a internet.',
+    );
+  }
+
+  // Vite dev (puerto 5173) no sirve Netlify Functions: el SPA fallback
+  // devuelve 404 con el index.html. Damos un mensaje claro para evitar
+  // que el alumno crea que la app está rota.
+  if (res.status === 404) {
+    throw new Error(
+      'Endpoint del mentor no disponible. En local arranca `netlify dev` ' +
+        '(puerto 8888) en vez de `vite dev`. En producción revisa que la ' +
+        'función `mentor-chat` esté desplegada.',
+    );
+  }
 
   const text = await res.text();
   let payload: MentorResponse & { error?: string };
   try {
     payload = JSON.parse(text) as MentorResponse & { error?: string };
   } catch {
-    throw new Error('Respuesta del mentor inválida.');
+    throw new Error(
+      `Respuesta del mentor inválida (HTTP ${res.status}). Verifica que ` +
+        '`OPENAI_API_KEY` y `SUPABASE_SERVICE_ROLE_KEY` estén en las env ' +
+        'vars del servidor.',
+    );
   }
 
   if (!res.ok) {
-    throw new Error(payload.error ?? 'Error al contactar al mentor.');
+    throw new Error(payload.error ?? `Error al contactar al mentor (HTTP ${res.status}).`);
   }
   if (!payload.answer || !payload.threadId) {
     throw new Error('Respuesta incompleta del mentor.');

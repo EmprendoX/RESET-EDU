@@ -36,8 +36,15 @@ export function AIMentorPanel({ courseId, lessonId, course, lesson }: Props) {
       }
     : undefined;
 
-  const { messages, isLoadingMessages, isError, isStreaming, sendMessage } =
-    useAIMentor({ courseId, lessonId, fileContext });
+  const {
+    messages,
+    isLoadingMessages,
+    isError,
+    isStreaming,
+    sendMessage,
+    sendError,
+    resetSendError,
+  } = useAIMentor({ courseId, lessonId, fileContext });
 
   const { profile: businessProfile } = useBusinessProfile();
   const { createNote } = useNotes({ courseId, lessonId });
@@ -127,6 +134,24 @@ export function AIMentorPanel({ courseId, lessonId, course, lesson }: Props) {
         lessonId={lessonId}
         onSaveAsNote={handleSaveAsNote}
       />
+
+      {sendError ? (
+        <div
+          className="shrink-0 border-t border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900"
+          role="alert"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <p className="leading-snug">{sendError}</p>
+            <button
+              type="button"
+              onClick={resetSendError}
+              className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium text-rose-700 hover:bg-rose-100"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <AIInputBox
         onSend={handleSend}
