@@ -4,7 +4,8 @@ import { BookOpen, FileImage, Layers, Plus } from 'lucide-react';
 import type { AdminCourseListFilters } from '@/types/admin';
 import { adminCoursesRepo } from '@/lib/courses/adminCoursesRepo';
 import { queryKeys } from '@/hooks/queryKeys';
-import { listMockMedia } from '@/data/adminMediaMockStore';
+import { listLessonAssetsAdmin } from '@/lib/storage/lessonAssetsRepo';
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { LoadingSkeleton } from '@/components/common/LoadingSkeleton';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -22,10 +23,17 @@ export function AdminDashboardPage() {
     queryFn: () => adminCoursesRepo.listCourses(DASH_LIST_FILTERS),
   });
 
+  const supabaseOk = isSupabaseConfigured() && Boolean(getSupabase());
   const mediaQ = useQuery({
     queryKey: ['admin', 'media-count'],
-    queryFn: async () => listMockMedia().length,
-    staleTime: 5_000,
+    queryFn: async () => {
+      const sb = getSupabase();
+      if (!sb) return 0;
+      const rows = await listLessonAssetsAdmin(sb);
+      return rows.length;
+    },
+    enabled: supabaseOk,
+    staleTime: 30_000,
   });
 
   if (q.isLoading) {
@@ -42,7 +50,7 @@ export function AdminDashboardPage() {
     <div className="mx-auto max-w-5xl space-y-8">
       <div>
         <p className="text-sm text-slate-600">
-          Gestiona cursos, lecciones y contenido (demo mock · sin Supabase).
+          Gestiona cursos, lecciones y contenido.
         </p>
       </div>
 
