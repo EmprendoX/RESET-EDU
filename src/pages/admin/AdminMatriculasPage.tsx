@@ -40,7 +40,7 @@ export function AdminMatriculasPage() {
   const searchQ = useQuery({
     queryKey: ['admin', 'profile-search', pickerEmail],
     queryFn: () => searchProfilesByEmail(pickerEmail),
-    enabled: supabaseOk && pickerEmail.trim().length >= 3,
+    enabled: supabaseOk && pickerEmail.trim().length >= 2,
   });
 
   const revokeM = useMutation({
@@ -158,7 +158,7 @@ export function AdminMatriculasPage() {
                 setPickerEmail(e.target.value);
                 setPickerUserId(null);
               }}
-              placeholder="mín. 3 caracteres"
+              placeholder="mín. 2 caracteres"
               className="focus-ring w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
               autoComplete="off"
             />
@@ -178,13 +178,14 @@ export function AdminMatriculasPage() {
                         {p.email ?? 'sin email'}
                       </span>
                       <span className="block text-xs text-slate-500">
-                        {p.full_name || '—'} · {p.role}
+                        {p.full_name || '—'}
+                        {p.role != null && p.role !== '' ? ` · ${p.role}` : ''}
                       </span>
                     </button>
                   </li>
                 ))}
               </ul>
-            ) : pickerEmail.trim().length >= 3 && searchQ.isSuccess ? (
+            ) : pickerEmail.trim().length >= 2 && searchQ.isSuccess ? (
               <p className="text-xs text-slate-500">Sin resultados.</p>
             ) : null}
           </div>

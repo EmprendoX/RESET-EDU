@@ -1,16 +1,25 @@
 import { useCallback, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AIMessage, MentorMode, MentorRequest } from '@/types/ai';
+import type { AIMessage, MentorFileContext, MentorMode } from '@/types/ai';
 import { sendMentorMessage } from '@/lib/ai/mentorClient';
 import { threadsRepo } from '@/lib/ai/threadsRepo';
+import { env } from '@/config/env';
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { nowIso, uid } from '@/lib/utils/time';
 import { useClassroomStore } from '@/stores/useClassroomStore';
 import { queryKeys } from './queryKeys';
 
+function mentorUsesLiveApi(): boolean {
+  const sb = getSupabase();
+  return Boolean(
+    isSupabaseConfigured() && sb && env.useSupabaseData && env.useMentorApi,
+  );
+}
+
 interface Args {
   courseId: string | undefined;
   lessonId: string | undefined;
-  fileContext?: MentorRequest['currentFileContext'];
+  fileContext?: MentorFileContext;
 }
 
 export function useAIMentor({ courseId, lessonId, fileContext }: Args) {
@@ -59,6 +68,8 @@ export function useAIMentor({ courseId, lessonId, fileContext }: Args) {
       if (!courseId || !threadId) {
         throw new Error('AI mentor: missing courseId/threadId');
       }
+      const useApi = mentorUsesLiveApi();
+
       const userMessage: AIMessage = {
         id: uid('msg'),
         thread_id: threadId,
@@ -66,14 +77,23 @@ export function useAIMentor({ courseId, lessonId, fileContext }: Args) {
         content: params.userMessage,
         created_at: nowIso(),
       };
-      setMessages((prev) => [...prev, userMessage]);
-      await threadsRepo.appendMessage(threadId, {
-        role: 'user',
-        content: params.userMessage,
-      });
+
+      if (!useApi) {
+        setMessages((prev) => [...prev, userMessage]);
+        await threadsRepo.appendMessage(threadId, {
+          role: 'user',
+          content: params.userMessage,
+        });
+      }
 
       setIsStreaming(true);
       try {
+        let accessToken: string | undefined;
+        if (useApi) {
+          const { data } = await getSupabase()!.auth.getSession();
+          accessToken = data.session?.access_token;
+        }
+
         const response = await sendMentorMessage({
           courseId,
           lessonId,
@@ -82,6 +102,7 @@ export function useAIMentor({ courseId, lessonId, fileContext }: Args) {
           mentorMode: params.mode ?? aiMode,
           selectedText: params.selectedText,
           currentFileContext: fileContext,
+          accessToken,
         });
 
         const assistantMessage: AIMessage = {
@@ -94,14 +115,21 @@ export function useAIMentor({ courseId, lessonId, fileContext }: Args) {
             ? { suggestedNoteTitle: response.suggestedNoteTitle }
             : undefined,
         };
-        setMessages((prev) => [...prev, assistantMessage]);
-        await threadsRepo.appendMessage(threadId, {
-          role: 'assistant',
-          content: response.answer,
-          id: response.messageId,
-          created_at: response.createdAt,
-          metadata: assistantMessage.metadata,
-        });
+
+        if (!useApi) {
+          setMessages((prev) => [...prev, assistantMessage]);
+          await threadsRepo.appendMessage(threadId, {
+            role: 'assistant',
+            content: response.answer,
+            id: response.messageId,
+            created_at: response.createdAt,
+            metadata: assistantMessage.metadata,
+          });
+        } else {
+          await queryClient.invalidateQueries({
+            queryKey: queryKeys.ai.messages(threadId),
+          });
+        }
 
         if (params.mode && params.mode !== aiMode) {
           await threadsRepo.updateThreadMode(threadId, params.mode);

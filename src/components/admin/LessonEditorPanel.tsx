@@ -25,7 +25,10 @@ import { queryKeys } from '@/hooks/queryKeys';
 import { LoadingSkeleton } from '@/components/common/LoadingSkeleton';
 import { ErrorState } from '@/components/common/ErrorState';
 import { LessonAulaPreviewPanel } from '@/components/admin/LessonAulaPreviewPanel';
+import { LessonAssetUploader } from '@/components/admin/LessonAssetUploader';
 import { LessonAssetUploaderMock } from '@/components/admin/LessonAssetUploaderMock';
+import { env } from '@/config/env';
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
 interface Props {
   courseId: string;
@@ -33,6 +36,8 @@ interface Props {
 }
 
 export function LessonEditorPanel({ courseId, lessonId }: Props) {
+  const useLessonStorageUpload =
+    isSupabaseConfigured() && Boolean(getSupabase()) && env.useSupabaseData;
   const qc = useQueryClient();
   const q = useQuery({
     queryKey: queryKeys.admin.course(courseId),
@@ -247,7 +252,15 @@ export function LessonEditorPanel({ courseId, lessonId }: Props) {
           />
         </div>
 
-        <LessonAssetUploaderMock setValue={setValue} />
+        {useLessonStorageUpload ? (
+          <LessonAssetUploader
+            courseId={courseId}
+            lessonId={lessonId}
+            setValue={setValue}
+          />
+        ) : (
+          <LessonAssetUploaderMock setValue={setValue} />
+        )}
       </div>
 
       {isModular ? (

@@ -13,6 +13,7 @@ Definidas en [`.env.example`](../.env.example) y leídas en [`src/config/env.ts`
 | `VITE_SUPABASE_URL` | URL del proyecto (`https://<ref>.supabase.co`, sin `/rest/v1/`). |
 | `VITE_SUPABASE_ANON_KEY` | Clave anónima (Settings → API). |
 | `VITE_USE_SUPABASE_DATA` | `true` cuando los repos lean de Supabase (requiere esquema aplicado y datos). |
+| `VITE_USE_MENTOR_API` | `true` para llamar a `/.netlify/functions/mentor-chat` con sesión Supabase (requiere `VITE_USE_SUPABASE_DATA=true` y variables de servidor en Netlify). |
 | `VITE_PUBLIC_APP_URL` | Opcional. URL pública **https** de la app (p. ej. `https://tu-app.netlify.app`). Si está definida y es válida, el **registro** (`signUp` en [`LoginPage.tsx`](../src/pages/auth/LoginPage.tsx)) usa esta base para `emailRedirectTo` (enlace del correo de confirmación). Si no, se usa `window.location.origin` (registro desde local → link a local). Debe estar permitida en Redirect URLs de Supabase. |
 | `VITE_MOCK_USER_ROLE` | Solo sin Supabase: `student` o por defecto admin demo. |
 
@@ -58,8 +59,8 @@ Si ejecutas `npm run dev` y te registras en `http://localhost:5173`, el correo l
 
 ## Inventario esquema / migraciones
 
-- Las migraciones locales viven en [`supabase/migrations/`](../supabase/migrations/): `001_initial_schema.sql`, `002_course_lesson_count.sql`, `003_rls_preview_lesson_assets_and_hardening.sql`.
-- El esquema remoto revisado vía MCP coincide con **001+002** (tablas `public.*`, RLS, `courses.lesson_count`). Si `list_migrations` del proyecto está vacío, el DDL pudo aplicarse fuera del tracking CLI: conviene aplicar las migraciones desde este repo (`supabase db push` con [CLI](https://supabase.com/docs/guides/cli) o pegando el SQL en el **SQL Editor**) para alinear historial.
+- Las migraciones locales viven en [`supabase/migrations/`](../supabase/migrations/): [`001_initial_schema.sql`](../supabase/migrations/001_initial_schema.sql), [`002_course_lesson_count.sql`](../supabase/migrations/002_course_lesson_count.sql), [`003_rls_preview_lesson_assets_and_hardening.sql`](../supabase/migrations/003_rls_preview_lesson_assets_and_hardening.sql), [`004_storage_lesson_files.sql`](../supabase/migrations/004_storage_lesson_files.sql), [`005_grant_has_course_access_rpc.sql`](../supabase/migrations/005_grant_has_course_access_rpc.sql), [`006_admin_superadmin_split.sql`](../supabase/migrations/006_admin_superadmin_split.sql).
+- **Inventario vía MCP** (`list_tables` en esquemas `public` y `storage`): en `public` suelen listarse `profiles`, `courses`, `course_modules`, `course_sections`, `lessons`, `enrollments`, `notes`, `lesson_progress`, `student_business_profiles`, `ai_threads`, `ai_messages`, `media_library_items`, `lesson_assets`; en `storage`, `buckets`, `objects` y tablas internas (p. ej. migraciones storage, multipart, analytics). Tras **006** debe existir también `public.activity_logs` y las funciones/RPC asociadas a roles; si **`activity_logs` no aparece**, el remoto no tiene aplicada **006** (o el DDL se aplicó de forma incompleta). Si `list_migrations` del proyecto está vacío, el DDL pudo aplicarse fuera del tracking CLI: conviene aplicar las migraciones desde este repo (`supabase db push` con [CLI](https://supabase.com/docs/guides/cli) o pegando el SQL en el **SQL Editor**) para alinear historial.
 
 ### Aplicar `003` en el proyecto Supabase
 
@@ -68,7 +69,38 @@ Si ejecutas `npm run dev` y te registras en `http://localhost:5173`, el correo l
 
 Contenido principal de **003**: `lesson_assets` + RLS; políticas de lectura para **lecciones preview** públicas y **temario** (`course_modules` / `course_sections`) en cursos `published`; `set_updated_at` con `search_path` fijo; `REVOKE EXECUTE` en `handle_new_user`, `refresh_course_lesson_count`, `lessons_touch_course_lesson_count` para roles `anon` y `authenticated` (sigue el uso vía triggers / interno).
 
-Tras aplicar, vuelve a ejecutar el **Security Advisor** del dashboard (o MCP `get_advisors`). Puede seguir avisando por `public.is_course_admin()` expuesto como RPC: corregirlo implica refactor (p. ej. esquema no expuesto o políticas sin esa función); no se revoca aquí para no romper las políticas RLS que lo invocan.
+### Aplicar `004` (Storage materiales de lección)
+
+1. Abre [`supabase/migrations/004_storage_lesson_files.sql`](../supabase/migrations/004_storage_lesson_files.sql).
+2. Ejecuta el archivo completo en el SQL Editor (o `supabase db push` si el proyecto está enlazado).
+
+Contenido de **004**: bucket público `lesson-files` (límite 50 MB) y políticas en `storage.objects`: lectura para `authenticated` y `anon`; en el SQL del archivo, escritura con `public.is_course_admin()` (INSERT/UPDATE/DELETE). La migración **006** sustituye esas condiciones de escritura por **`public.is_course_staff()`** (`course_admin` o `superadmin`), alineado con cursos y `lesson_assets`. El editor admin sube archivos vía [`lessonFileUpload.ts`](../src/lib/storage/lessonFileUpload.ts); cada subida con `VITE_USE_SUPABASE_DATA=true` también escribe metadata en `lesson_assets` ([`lessonAssetsSupabase.ts`](../src/lib/storage/lessonAssetsSupabase.ts)) y actualiza el formulario (`pdf_url` / `file_url`, `file_type`). **Guardar lección** sincroniza columnas en `lessons` para el visor del alumno.
+
+### Variables Netlify (mentor IA)
+
+En el sitio Netlify (no en `.env.local` del frontend): `SUPABASE_URL` (misma base que `VITE_SUPABASE_URL`), `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, opcional `OPENAI_MODEL`. La función [`netlify/functions/mentor-chat.ts`](../netlify/functions/mentor-chat.ts) valida el JWT del alumno, comprueba acceso al curso y persiste en `ai_messages` / `ai_threads`.
+
+## Checklist E2E (MVP)
+
+1. Aplicar migraciones **003**, **004**, **005** y **006** en el proyecto remoto (SQL Editor, CLI enlazado, o `SUPABASE_DB_URL` en `.env.local` + `npm run db:apply-004-006` para aplicar **004** y **006** desde [`supabase/migrations/`](../supabase/migrations/) en orden).
+2. `.env.local`: `VITE_USE_SUPABASE_DATA=true` (y opcional `VITE_USE_MENTOR_API=true` si la función está desplegada con las env de servidor).
+3. **Admin** (`course_admin`): crear curso **publicado** y **gratis** (o matricular al alumno en `/admin/matriculas`), lección **publicada**, subir PDF y **Guardar lección**.
+4. **Alumno**: abrir `/cursos`, entrar al aula, abrir la lección: PDF visible; progreso y notas si aplica.
+5. **Mentor** (con API): enviar un mensaje; comprobar filas en `ai_messages` y ausencia de errores en logs de la función.
+
+### Aplicar `005` (RPC `has_course_access`)
+
+1. Abre [`supabase/migrations/005_grant_has_course_access_rpc.sql`](../supabase/migrations/005_grant_has_course_access_rpc.sql).
+2. Ejecútalo en el SQL Editor si la función Netlify `mentor-chat` no puede invocar `has_course_access` vía RPC.
+
+### Aplicar `006` (staff vs superadmin, `profiles`, `activity_logs`, matrículas)
+
+1. Abre [`supabase/migrations/006_admin_superadmin_split.sql`](../supabase/migrations/006_admin_superadmin_split.sql).
+2. Ejecútalo en el SQL Editor (o `supabase db push` si el proyecto está enlazado).
+
+Resumen: helpers `is_superadmin()`, `is_course_admin()` (solo rol homónimo) e `is_course_staff()` (`course_admin` | `superadmin`); RLS de cursos, módulos, secciones, lecciones, matrículas, `lesson_assets`, `media_library_items` y políticas de escritura del bucket `lesson-files` usan `is_course_staff()`. **`profiles`**: lectura de terceros solo superadmin; columna `role` solo mutable por superadmin (trigger + política). **`activity_logs`**: tabla nueva; SELECT solo superadmin; escritura pensada con `service_role` / backend. Matrículas y búsqueda por email en admin vía RPC `admin_list_enrollments` y `admin_search_profiles_by_email` (implementación en [`src/lib/enrollments/enrollmentsAdminRepo.ts`](../src/lib/enrollments/enrollmentsAdminRepo.ts)), sin depender de un join PostgREST directo a `profiles` ajenos para staff.
+
+Tras aplicar **003**, **004** y **006**, vuelve a ejecutar el **Security Advisor** del dashboard (o MCP `get_advisors`). Puede avisar por funciones `SECURITY DEFINER` referenciadas en RLS (`is_course_admin`, `is_course_staff`, `is_superadmin`): son helpers usados por las políticas; **no** revoques `EXECUTE` a `authenticated` en ellas mientras sigan en expresiones RLS (PostgREST evalúa con el rol del JWT y la política fallaría). Las RPC `admin_list_enrollments` y `admin_search_profiles_by_email` tienen `GRANT EXECUTE` a `authenticated` y `REVOKE EXECUTE FROM PUBLIC` en **006** (patrón distinto al de los helpers de políticas).
 
 ## Comprobaciones manuales sugeridas (PostgREST / SQL)
 
@@ -76,7 +108,7 @@ Con la **anon key** y sin `Authorization` (visitante): `select` sobre `courses` 
 
 Con JWT de **alumno** sin enrollment en curso de pago: no debe ver lecciones no preview de ese curso; en curso **gratis** publicado sí (vía `has_course_access`).
 
-Con rol **course_admin** en `profiles`: CRUD de borradores y `lesson_assets` según políticas `*_write_admin`.
+Con rol **`course_admin`** o **`superadmin`** en `profiles` (staff): CRUD de borradores, `lesson_assets` y escritura en Storage del bucket `lesson-files` según políticas (condición `is_course_staff()` tras **006**). Listado de matrículas y búsqueda de alumnos por email usan las RPC `admin_*`, no un `select` con join directo a `profiles` ajenos desde el cliente.
 
 ## Divergencias respecto al PRD §11 (documentadas)
 
@@ -90,7 +122,7 @@ Con rol **course_admin** en `profiles`: CRUD de borradores y `lesson_assets` seg
 
 | Tabla PRD | Uso actual en mock | Repo lectura (alumno) | Repo escritura (admin) |
 |-----------|-------------------|----------------------|-------------------------|
-| `profiles` | No | — | Futuro: rol `course_admin` / RLS |
+| `profiles` | No | — | RLS **006**: cada usuario lee solo su fila; superadmin lee todas; `role` solo editable por superadmin; staff usa RPCs para datos de alumnos en matrículas |
 | `courses` | `Course` dentro de `CourseStructure` | `coursesRepo.getCourseStructureBySlug` | `adminCoursesRepo.updateCourseMetadata`, `publishCourse`, `setCourseStatus`, `createDraftCourse` |
 | `course_modules` | `CourseModule[]` | Igual vía estructura | `addModule`, `updateModule`, `deleteModule`, `reorderModules` |
 | `course_sections` | `CourseSection[]` | Igual | `addSection`, `updateSection`, `deleteSection`, `reorderSections` |
@@ -98,8 +130,9 @@ Con rol **course_admin** en `profiles`: CRUD de borradores y `lesson_assets` seg
 | `lesson_progress` | `localStorage` (demo) si no hay Supabase datos | `progressRepo` → [`progressSupabase.ts`](../src/lib/progress/progressSupabase.ts) con sesión | — |
 | `notes` | `localStorage` (demo) si no hay Supabase datos | `notesRepo` → [`notesSupabase.ts`](../src/lib/notes/notesSupabase.ts) con sesión | — |
 | `student_business_profiles` | `localStorage` (demo) si no hay Supabase datos | `businessProfileRepo` → [`businessProfileSupabase.ts`](../src/lib/business/businessProfileSupabase.ts) con sesión | — |
-| `lesson_assets` | Opcional; hoy URLs en `Lesson` (`pdf_url`, `file_url`) | RLS: misma lógica que lección (preview o acceso) | Admin; Storage en épica siguiente |
-| Storage (PDF/PPT) | `adminMediaMockStore` + URLs blob | — | Reemplazar por upload Supabase + `storage_path` en `lesson_assets` |
+| `lesson_assets` | Filas al subir desde el editor (Storage + metadata) además de URLs en `lessons` | RLS: misma lógica que lección (preview o acceso) | Staff (`course_admin` o `superadmin`) — políticas `is_course_staff()` tras **006** |
+| `activity_logs` | — | — | Lectura solo superadmin (**006**); escritura vía `service_role` / jobs |
+| Storage (PDF/PPT) | Mock sin Supabase; bucket `lesson-files` + URLs en `lessons` con Supabase | GET público al objeto | Staff: upload desde editor (`is_course_staff()` en escritura tras **006**) con `VITE_USE_SUPABASE_DATA=true` |
 
 Con `VITE_USE_SUPABASE_DATA=true`, URL/anon key válidos y usuario autenticado (`auth.getUser()`), esos tres repos persisten en Postgres con RLS; sin sesión las lecturas devuelven vacío o defaults y las escrituras fallan con error claro.
 
@@ -114,7 +147,8 @@ Con `VITE_USE_SUPABASE_DATA=true`, URL/anon key válidos y usuario autenticado (
 
 - Sustituir `RequireAdminRoute` + `useAuth` mock por sesión Supabase y `profiles.role IN ('course_admin','superadmin')`.
 - Políticas alineadas al [PRD §12](PRD.md): alumnos leen publicados; admin escribe borradores y estructura.
-- **003**: visitantes leen lecciones `published` + `is_preview` en cursos `published`; módulos y secciones legibles para cualquiera si el curso está `published` (temario de marketing); `lesson_assets` legible si admin o misma condición que la lección (preview o `has_course_access`).
+- **003**: visitantes leen lecciones `published` + `is_preview` en cursos `published`; módulos y secciones legibles para cualquiera si el curso está `published` (temario de marketing); `lesson_assets` legible si staff o misma condición que la lección (preview o `has_course_access`).
+- **006** ([PRD §6.3](PRD.md) / [§6.4](PRD.md)): `is_course_staff()` para operaciones de contenido y storage; `is_superadmin()` para `profiles` ajenos, `activity_logs` y cambios de `role`; matrículas vía RPCs staff.
 
 ## Invalidación de caché
 

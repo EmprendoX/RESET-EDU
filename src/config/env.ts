@@ -29,6 +29,11 @@ export const env = {
   /** Lectura de datos (p. ej. catálogo) desde Supabase; requiere esquema aplicado. */
   useSupabaseData: import.meta.env.VITE_USE_SUPABASE_DATA === 'true',
   /**
+   * Mentor vía `/.netlify/functions/mentor-chat` + hilos en `ai_*`.
+   * Requiere Supabase configurado, `useSupabaseData` y variables en Netlify (OpenAI + service role).
+   */
+  useMentorApi: import.meta.env.VITE_USE_MENTOR_API === 'true',
+  /**
    * Origen público de la app (solo https). Si es null, auth signup usa `window.location.origin`.
    * Debe coincidir con una entrada en Supabase → Authentication → URL configuration → Redirect URLs.
    */

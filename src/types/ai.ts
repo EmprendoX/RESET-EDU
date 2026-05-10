@@ -46,6 +46,8 @@ export interface MentorRequest {
   selectedText?: string;
   currentFileContext?: MentorFileContext;
   currentPageOrSlide?: number;
+  /** Bearer de Supabase; solo para `/.netlify/functions/mentor-chat`. */
+  accessToken?: string;
 }
 
 export interface MentorResponse {

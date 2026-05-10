@@ -1,48 +1,36 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import type { UseFormSetValue } from 'react-hook-form';
 import type { LessonFormValues } from '@/types/admin';
 import { Button } from '@/components/ui/Button';
 import { AdminMockFileDropzone } from '@/components/admin/AdminMockFileDropzone';
 import { cn } from '@/lib/utils/cn';
-import {
-  LESSON_UPLOAD_ROWS,
-  type LessonUploadRowConfig,
-} from '@/lib/storage/lessonUploadRows';
+import { uploadLessonFile } from '@/lib/storage/lessonFileUpload';
+import { persistLessonAssetAfterUpload } from '@/lib/storage/lessonAssetsSupabase';
+import { getSupabase } from '@/lib/supabase/client';
+import { LESSON_UPLOAD_ROWS } from '@/lib/storage/lessonUploadRows';
+import type { LessonUploadRowConfig } from '@/lib/storage/lessonUploadRows';
 
 type UploadState = 'idle' | 'uploading' | 'uploaded' | 'error';
 
-interface MockRowProps {
+interface StorageRowProps {
   row: LessonUploadRowConfig;
+  courseId: string;
+  lessonId: string;
   setValue: UseFormSetValue<LessonFormValues>;
 }
 
-function MockUploadRow({ row, setValue }: MockRowProps) {
+function StorageUploadRow({
+  row,
+  courseId,
+  lessonId,
+  setValue,
+}: StorageRowProps) {
   const [state, setState] = useState<UploadState>('idle');
   const [errorHint, setErrorHint] = useState<string | null>(null);
   const [lastUrl, setLastUrl] = useState<string | null>(null);
   const [pendingName, setPendingName] = useState<string | null>(null);
-  const blobRef = useRef<string | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const clearTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
-
-  useEffect(
-    () => () => {
-      clearTimer();
-      if (blobRef.current) {
-        URL.revokeObjectURL(blobRef.current);
-        blobRef.current = null;
-      }
-    },
-    [clearTimer],
-  );
-
-  function onFiles(files: File[]) {
+  async function onFiles(files: File[]) {
     const file = files[0];
     if (!file) return;
     const validationError = row.validate(file);
@@ -52,35 +40,54 @@ function MockUploadRow({ row, setValue }: MockRowProps) {
       return;
     }
     setErrorHint(null);
-    clearTimer();
-    if (blobRef.current) {
-      URL.revokeObjectURL(blobRef.current);
-      blobRef.current = null;
-    }
-    const url = URL.createObjectURL(file);
-    blobRef.current = url;
     setPendingName(file.name);
-    setLastUrl(url);
     setState('uploading');
-    timerRef.current = setTimeout(() => {
+    try {
+      const sb = getSupabase();
+      if (!sb) throw new Error('Supabase no está configurado.');
+
+      const { publicUrl, path } = await uploadLessonFile({
+        courseId,
+        lessonId,
+        file,
+      });
+
+      await persistLessonAssetAfterUpload(sb, {
+        lessonId,
+        courseId,
+        file,
+        publicUrl,
+        storagePath: path,
+        fileType: row.fileType,
+        assetSlot: row.assetSlot,
+      });
+
+      setLastUrl(publicUrl);
       setState('uploaded');
-      timerRef.current = null;
-    }, 450);
-  }
-
-  function apply() {
-    if (!lastUrl || state !== 'uploaded') return;
-
-    if (row.applyPdf) {
-      setValue('pdf_url', lastUrl, { shouldDirty: true, shouldValidate: true });
+      if (row.applyPdf) {
+        setValue('pdf_url', publicUrl, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+      }
+      if (row.applyFile) {
+        setValue('file_url', publicUrl, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+      }
+      setValue('file_type', row.fileType, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    } catch (e) {
+      setErrorHint(
+        e instanceof Error ? e.message : 'Error al subir el archivo.',
+      );
+      setState('error');
+      setLastUrl(null);
+      setPendingName(null);
     }
-    if (row.applyFile) {
-      setValue('file_url', lastUrl, { shouldDirty: true, shouldValidate: true });
-    }
-    setValue('file_type', row.fileType, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
   }
 
   const busy = state === 'uploading';
@@ -94,7 +101,7 @@ function MockUploadRow({ row, setValue }: MockRowProps) {
           {pendingName && state !== 'idle' ? (
             <p className="mt-1 truncate text-xs text-slate-700">{pendingName}</p>
           ) : null}
-          {lastUrl && state !== 'idle' && state !== 'error' ? (
+          {lastUrl && state === 'uploaded' ? (
             <p className="mt-0.5 truncate font-mono text-[10px] text-slate-500">
               {lastUrl}
             </p>
@@ -115,8 +122,8 @@ function MockUploadRow({ row, setValue }: MockRowProps) {
           >
             {state === 'idle' && 'Listo'}
             {state === 'uploading' && 'Subiendo…'}
-            {state === 'uploaded' && 'Listo para aplicar'}
-            {state === 'error' && 'Revisa el archivo'}
+            {state === 'uploaded' && 'Subido'}
+            {state === 'error' && 'Error'}
           </span>
           <Button
             type="button"
@@ -128,21 +135,9 @@ function MockUploadRow({ row, setValue }: MockRowProps) {
               setErrorHint(null);
               setPendingName(null);
               setLastUrl(null);
-              if (blobRef.current) {
-                URL.revokeObjectURL(blobRef.current);
-                blobRef.current = null;
-              }
             }}
           >
             Reiniciar
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            disabled={state !== 'uploaded' || !lastUrl}
-            onClick={apply}
-          >
-            {row.applyPdf ? 'Aplicar a PDF' : 'Aplicar a archivo'}
           </Button>
         </div>
       </div>
@@ -150,32 +145,40 @@ function MockUploadRow({ row, setValue }: MockRowProps) {
         variant="compact"
         accept={row.accept}
         disabled={busy}
-        description="Suelta el archivo o haz clic para elegirlo."
-        onFilesSelected={onFiles}
+        description="Suelta el archivo o haz clic para elegirlo (Supabase Storage)."
+        onFilesSelected={(files) => void onFiles(files)}
       />
     </li>
   );
 }
 
 interface Props {
+  courseId: string;
+  lessonId: string;
   setValue: UseFormSetValue<LessonFormValues>;
   className?: string;
 }
 
-export function LessonAssetUploaderMock({ setValue, className }: Props) {
+export function LessonAssetUploader({ courseId, lessonId, setValue, className }: Props) {
   return (
     <div className={cn('md:col-span-2', className)}>
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-        Subir archivos (mock · sin red)
+        Subir archivos (Supabase Storage)
       </p>
       <p className="mt-1 text-xs text-slate-500">
-        Genera URLs <code className="rounded bg-slate-100 px-1">blob:</code> en el
-        navegador. Guarda la lección para persistir en el catálogo mock; tras
-        recargar, esas URLs pueden invalidarse hasta tener Storage.
+        Bucket público <code className="rounded bg-slate-100 px-1">lesson-files</code>.
+        Cada subida registra metadata en <code className="rounded bg-slate-100 px-1">lesson_assets</code>.
+        Guarda la lección para sincronizar URL en el registro de la lección (visor del alumno).
       </p>
       <ul className="mt-3 space-y-3">
         {LESSON_UPLOAD_ROWS.map((row) => (
-          <MockUploadRow key={row.id} row={row} setValue={setValue} />
+          <StorageUploadRow
+            key={row.id}
+            row={row}
+            courseId={courseId}
+            lessonId={lessonId}
+            setValue={setValue}
+          />
         ))}
       </ul>
     </div>

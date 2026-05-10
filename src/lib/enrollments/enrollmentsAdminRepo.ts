@@ -15,7 +15,8 @@ export interface ProfileSearchHit {
   id: string;
   email: string | null;
   full_name: string | null;
-  role: string;
+  /** Solo superadmin vía RPC; null para course_admin. */
+  role: string | null;
 }
 
 export interface CourseOption {
@@ -34,47 +35,37 @@ function assertConfigured(): void {
 }
 
 /**
- * Listado de matrículas para admins (RLS: course_admin).
+ * Listado de matrículas para staff (course_admin / superadmin) vía RPC security definer.
  */
 export async function listEnrollmentsAdmin(): Promise<EnrollmentAdminRow[]> {
   assertConfigured();
   const sb = getSupabase()!;
 
-  const { data, error } = await sb
-    .from('enrollments')
-    .select(
-      'user_id, course_id, created_at, profiles(email, full_name), courses(title, slug, is_free)',
-    );
+  const { data, error } = await sb.rpc('admin_list_enrollments');
 
   if (error) throw error;
 
-  const rows: EnrollmentAdminRow[] = (data ?? []).map((raw) => {
-    const r = raw as {
-      user_id: string;
-      course_id: string;
-      created_at: string;
-      profiles:
-        | { email: string | null; full_name: string | null }
-        | { email: string | null; full_name: string | null }[]
-        | null;
-      courses:
-        | { title: string; slug: string; is_free: boolean }
-        | { title: string; slug: string; is_free: boolean }[]
-        | null;
-    };
-    const prof = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
-    const crs = Array.isArray(r.courses) ? r.courses[0] : r.courses;
-    return {
-      user_id: r.user_id,
-      course_id: r.course_id,
-      created_at: r.created_at,
-      user_email: prof?.email ?? null,
-      user_full_name: prof?.full_name ?? null,
-      course_title: crs?.title ?? '—',
-      course_slug: crs?.slug ?? '',
-      course_is_free: Boolean(crs?.is_free),
-    };
-  });
+  type RpcRow = {
+    user_id: string;
+    course_id: string;
+    created_at: string;
+    user_email: string | null;
+    user_full_name: string | null;
+    course_title: string;
+    course_slug: string;
+    course_is_free: boolean;
+  };
+
+  const rows: EnrollmentAdminRow[] = ((data ?? []) as RpcRow[]).map((r) => ({
+    user_id: r.user_id,
+    course_id: r.course_id,
+    created_at: r.created_at,
+    user_email: r.user_email ?? null,
+    user_full_name: r.user_full_name ?? null,
+    course_title: r.course_title ?? '—',
+    course_slug: r.course_slug ?? '',
+    course_is_free: Boolean(r.course_is_free),
+  }));
 
   rows.sort((a, b) => b.created_at.localeCompare(a.created_at));
   return rows;
@@ -88,11 +79,9 @@ export async function searchProfilesByEmail(
   const term = q.trim();
   if (term.length < 2) return [];
 
-  const { data, error } = await sb
-    .from('profiles')
-    .select('id, email, full_name, role')
-    .ilike('email', `%${term}%`)
-    .limit(25);
+  const { data, error } = await sb.rpc('admin_search_profiles_by_email', {
+    p_term: term,
+  });
 
   if (error) throw error;
   return (data ?? []) as ProfileSearchHit[];
