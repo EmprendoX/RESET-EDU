@@ -57,6 +57,12 @@ export interface PublishedCourseSummary {
   short_description: string;
   cover_image_url: string;
   lessonCount: number;
+  /** Opcionales: presentes cuando se cargan desde Supabase o store con datos completos. */
+  category?: string;
+  level?: CourseLevel;
+  is_free?: boolean;
+  is_featured?: boolean;
+  published_at?: string;
 }
 
 /** Catálogo publicado con flag de acceso al aula (enrollment / gratis / rol admin). */

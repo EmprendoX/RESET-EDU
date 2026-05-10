@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link, Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ZodError } from 'zod';
 import { ChevronRight } from 'lucide-react';
@@ -36,6 +36,8 @@ function SectionTitle({
 
 export function BusinessProfilePage() {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const isOnboarding = searchParams.get('onboarding') === '1';
   const { isAuthenticated, authReady } = useAuth();
   const {
     profile,
@@ -153,6 +155,27 @@ export function BusinessProfilePage() {
           migrará a Supabase).
         </p>
       </div>
+
+      {isOnboarding ? (
+        <div
+          className="flex flex-col gap-3 rounded-2xl border border-brand-200 bg-brand-50 px-5 py-4 text-sm text-brand-900 sm:flex-row sm:items-center sm:justify-between"
+          role="status"
+        >
+          <div>
+            <p className="font-semibold">¡Bienvenido a RESET EDU!</p>
+            <p className="mt-1 text-xs text-brand-800">
+              Completa tu perfil de negocio para que el mentor IA aplique
+              cada lección a tu caso real. Solo te tomará un par de minutos.
+            </p>
+          </div>
+          <Link
+            to="/dashboard"
+            className="self-start whitespace-nowrap rounded-lg border border-brand-300 bg-white px-3 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-100 sm:self-auto"
+          >
+            Saltar por ahora
+          </Link>
+        </div>
+      ) : null}
 
       <form
         onSubmit={handleSubmit(onSubmit)}

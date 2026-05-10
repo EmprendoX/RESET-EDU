@@ -142,6 +142,11 @@ export function mapLessonRow(r: Record<string, unknown>): Lesson {
 function mapPublishedSummaryFromCourseRow(
   r: Record<string, unknown>,
 ): PublishedCourseSummary {
+  const category = r.category != null ? String(r.category) : undefined;
+  const publishedAt =
+    r.published_at != null && r.published_at !== ''
+      ? String(r.published_at)
+      : undefined;
   return {
     id: String(r.id ?? ''),
     slug: String(r.slug ?? ''),
@@ -149,6 +154,15 @@ function mapPublishedSummaryFromCourseRow(
     short_description: String(r.short_description ?? ''),
     cover_image_url: String(r.cover_image_url ?? ''),
     lessonCount: Number(r.lesson_count ?? 0),
+    category: category && category.length > 0 ? category : undefined,
+    level:
+      r.level != null && r.level !== ''
+        ? parseCourseLevel(r.level)
+        : undefined,
+    is_free: r.is_free != null ? Boolean(r.is_free) : undefined,
+    is_featured:
+      r.is_featured != null ? Boolean(r.is_featured) : undefined,
+    published_at: publishedAt,
   };
 }
 
@@ -195,7 +209,7 @@ export async function listPublishedCatalogFromSupabase(
   const { data: coursesRows, error } = await sb
     .from('courses')
     .select(
-      'id, slug, title, short_description, cover_image_url, lesson_count, is_free',
+      'id, slug, title, short_description, cover_image_url, lesson_count, category, level, is_free, is_featured, published_at',
     )
     .eq('status', 'published')
     .order('title');

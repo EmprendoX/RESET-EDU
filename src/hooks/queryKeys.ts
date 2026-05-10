@@ -11,6 +11,7 @@ export const queryKeys = {
       ['notes', 'list', courseId, lessonId ?? null] as const,
     listByCourse: (courseId: string) =>
       ['notes', 'list', courseId] as const,
+    listAll: () => ['notes', 'list-all'] as const,
   },
   progress: {
     listByCourse: (courseId: string) =>

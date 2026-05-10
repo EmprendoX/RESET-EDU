@@ -104,6 +104,20 @@ export async function sbNotesListAllForCourse(
   return (data ?? []).map((r) => mapRow(asRecord(r)));
 }
 
+export async function sbNotesListAllForUser(
+  sb: SupabaseClient,
+): Promise<Note[]> {
+  if (!(await getSessionUserId(sb))) return [];
+
+  const { data, error } = await sb
+    .from('notes')
+    .select('*')
+    .order('updated_at', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []).map((r) => mapRow(asRecord(r)));
+}
+
 export async function sbNotesListRecent(
   sb: SupabaseClient,
   limit: number,

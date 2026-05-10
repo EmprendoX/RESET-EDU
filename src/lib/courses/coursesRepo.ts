@@ -43,7 +43,7 @@ export const coursesRepo = {
       const { data, error } = await sb
         .from('courses')
         .select(
-          'id, slug, title, short_description, cover_image_url, lesson_count',
+          'id, slug, title, short_description, cover_image_url, lesson_count, category, level, is_free, is_featured, published_at',
         )
         .eq('status', 'published')
         .order('title');
@@ -55,6 +55,11 @@ export const coursesRepo = {
         short_description: (row.short_description as string) ?? '',
         cover_image_url: (row.cover_image_url as string) ?? '',
         lessonCount: Number(row.lesson_count ?? 0),
+        category: (row.category as string) ?? undefined,
+        level: (row.level as PublishedCourseSummary['level']) ?? undefined,
+        is_free: row.is_free as boolean | undefined,
+        is_featured: row.is_featured as boolean | undefined,
+        published_at: (row.published_at as string) ?? undefined,
       }));
     }
 
@@ -68,8 +73,23 @@ export const coursesRepo = {
         short_description: s.course.short_description,
         cover_image_url: s.course.cover_image_url,
         lessonCount: s.lessons.length,
+        category: s.course.category,
+        level: s.course.level,
+        is_free: s.course.is_free,
+        is_featured: s.course.is_featured,
+        published_at: s.course.published_at,
       }))
       .sort((a, b) => a.title.localeCompare(b.title, 'es'));
+  },
+
+  /**
+   * Cursos publicados con `is_featured = true`. Usado por la homepage (FR-001).
+   * Si Supabase no está conectado, filtra el store local.
+   */
+  async listFeaturedSummaries(limit = 6): Promise<PublishedCourseSummary[]> {
+    const all = await this.listPublishedSummaries();
+    const featured = all.filter((c) => c.is_featured === true);
+    return featured.slice(0, Math.max(0, limit));
   },
 
   /** Catálogo publicado con `hasAccess` para el aula; accesibles primero, luego por título. */

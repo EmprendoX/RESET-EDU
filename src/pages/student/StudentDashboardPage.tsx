@@ -119,12 +119,26 @@ export function StudentDashboardPage() {
             Continúa donde lo dejaste y mantén tu perfil listo para el mentor.
           </p>
         </div>
-        <Link
-          to="/mi-negocio"
-          className="focus-ring inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
-        >
-          Mi negocio
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to="/mis-cursos"
+            className="focus-ring inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            Mis cursos
+          </Link>
+          <Link
+            to="/notas"
+            className="focus-ring inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            Mis notas
+          </Link>
+          <Link
+            to="/mi-negocio"
+            className="focus-ring inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            Mi negocio
+          </Link>
+        </div>
       </header>
 
       {profileIncomplete ? (
@@ -155,11 +169,19 @@ export function StudentDashboardPage() {
       </section>
 
       <section className="space-y-3">
-        <div className="flex items-center gap-2">
-          <NotebookPen className="h-5 w-5 text-note-600" aria-hidden />
-          <h2 className="text-lg font-semibold text-slate-900">
-            Notas recientes
-          </h2>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <NotebookPen className="h-5 w-5 text-note-600" aria-hidden />
+            <h2 className="text-lg font-semibold text-slate-900">
+              Notas recientes
+            </h2>
+          </div>
+          <Link
+            to="/notas"
+            className="text-xs font-medium text-brand-600 hover:text-brand-700"
+          >
+            Ver todas →
+          </Link>
         </div>
         {data.notes.length === 0 ? (
           <EmptyState

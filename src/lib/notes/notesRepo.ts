@@ -13,6 +13,7 @@ import {
   sbNotesCreate,
   sbNotesList,
   sbNotesListAllForCourse,
+  sbNotesListAllForUser,
   sbNotesListRecent,
   sbNotesRemove,
   sbNotesUpdate,
@@ -46,6 +47,19 @@ export const notesRepo = {
       ? notes.filter((n) => n.lesson_id === args.lessonId)
       : notes;
     return [...filtered].sort((a, b) => {
+      if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
+      return b.updated_at.localeCompare(a.updated_at);
+    });
+  },
+
+  async listAllForUser(): Promise<Note[]> {
+    const sb = getSupabase();
+    if (isNotesRemote() && sb) {
+      return sbNotesListAllForUser(sb);
+    }
+
+    await randomDelay();
+    return [...loadAll()].sort((a, b) => {
       if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
       return b.updated_at.localeCompare(a.updated_at);
     });

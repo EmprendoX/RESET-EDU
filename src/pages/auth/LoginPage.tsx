@@ -123,8 +123,14 @@ export function LoginPage() {
         return;
       }
       if (data.session) {
-        setInfoMessage('Cuenta creada. Ya puedes usar la app.');
-        navigate(targetPath, { replace: true });
+        setInfoMessage('Cuenta creada. Vamos a configurar tu negocio.');
+        // Onboarding (FR-006): si el usuario no especificó destino, llevamos al
+        // perfil de negocio para que la IA pueda personalizar respuestas.
+        const destination =
+          nextParam && targetPath !== '/dashboard'
+            ? targetPath
+            : '/mi-negocio?onboarding=1';
+        navigate(destination, { replace: true });
         return;
       }
       let confirmMsg =
@@ -258,6 +264,17 @@ export function LoginPage() {
         >
           {mode === 'signin' ? 'Entrar' : 'Registrarse'}
         </Button>
+
+        {mode === 'signin' ? (
+          <p className="text-center text-xs text-slate-500">
+            <Link
+              to="/forgot-password"
+              className="font-medium text-brand-600 hover:text-brand-700"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </p>
+        ) : null}
       </form>
 
       <p className="mt-8 text-center text-sm text-slate-500">

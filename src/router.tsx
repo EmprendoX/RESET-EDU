@@ -6,6 +6,9 @@ import { StudentDashboardPage } from '@/pages/student/StudentDashboardPage';
 import { BusinessProfilePage } from '@/pages/student/BusinessProfilePage';
 import { LandingPage } from '@/pages/public/LandingPage';
 import { LoginPage } from '@/pages/auth/LoginPage';
+import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
+import { MyCoursesPage } from '@/pages/student/MyCoursesPage';
+import { NotesPage } from '@/pages/student/NotesPage';
 import { NotFoundPage } from '@/pages/public/NotFoundPage';
 import { CourseCatalogPage } from '@/pages/public/CourseCatalogPage';
 import { CourseDetailPage } from '@/pages/public/CourseDetailPage';
@@ -25,10 +28,14 @@ export function AppRouter() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/cursos" element={<CourseCatalogPage />} />
       <Route path="/cursos/:slug" element={<CourseDetailPage />} />
       <Route path="/dashboard" element={<StudentDashboardPage />} />
+      <Route path="/mis-cursos" element={<MyCoursesPage />} />
       <Route path="/mi-negocio" element={<BusinessProfilePage />} />
+      <Route path="/notas" element={<NotesPage />} />
+      <Route path="/notas/:courseId" element={<NotesPage />} />
       <Route
         path="/aprender/:courseSlug"
         element={<ClassroomPage />}
