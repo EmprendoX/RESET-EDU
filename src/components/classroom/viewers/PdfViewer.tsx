@@ -15,6 +15,7 @@ import { FileLoadingState } from '@/components/common/FileLoadingState';
 import { FileErrorState } from '@/components/common/FileErrorState';
 import { configurePdfWorker } from '@/lib/files/pdfWorker';
 import { getFileNameFromUrl } from '@/lib/files/fileType';
+import { useResolvedAssetUrl } from '@/hooks/useResolvedAssetUrl';
 import { cn } from '@/lib/utils/cn';
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -30,7 +31,13 @@ interface Props {
 const ZOOM_STEPS = [0.6, 0.75, 0.9, 1.0, 1.15, 1.3, 1.5, 1.75, 2.0];
 
 export function PdfViewer({ lesson, embedded }: Props) {
-  const url = lesson.pdf_url ?? lesson.file_url;
+  const rawUrl = lesson.pdf_url || lesson.file_url || '';
+  const {
+    url: resolvedUrl,
+    loading: resolvingUrl,
+    error: resolveError,
+  } = useResolvedAssetUrl(rawUrl);
+  const url = resolvedUrl;
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1);
@@ -39,8 +46,8 @@ export function PdfViewer({ lesson, embedded }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const fileName = useMemo(
-    () => getFileNameFromUrl(url ?? '') ?? 'Documento.pdf',
-    [url],
+    () => getFileNameFromUrl(rawUrl) ?? 'Documento.pdf',
+    [rawUrl],
   );
 
   // file prop must be stable to avoid re-fetches.
@@ -57,11 +64,24 @@ export function PdfViewer({ lesson, embedded }: Props) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  if (!url) {
+  if (!rawUrl) {
     return (
       <FileErrorState
         title="PDF no disponible"
         description="Esta lección no tiene un PDF configurado."
+      />
+    );
+  }
+  if (resolvingUrl) {
+    return <FileLoadingState label="Preparando PDF…" />;
+  }
+  if (resolveError || !url) {
+    return (
+      <FileErrorState
+        title="No pudimos cargar el PDF"
+        description={
+          resolveError?.message ?? 'No se pudo generar la URL firmada.'
+        }
       />
     );
   }

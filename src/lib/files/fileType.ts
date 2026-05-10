@@ -45,7 +45,9 @@ export function getFileNameFromUrl(url: string | undefined): string | undefined 
     const last = segments[segments.length - 1];
     return last ? decodeURIComponent(last) : undefined;
   } catch {
-    return undefined;
+    const segments = url.split('/').filter(Boolean);
+    const last = segments[segments.length - 1];
+    return last || undefined;
   }
 }
 

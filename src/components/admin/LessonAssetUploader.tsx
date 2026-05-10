@@ -1,96 +1,155 @@
 import { useState } from 'react';
-import type { UseFormSetValue } from 'react-hook-form';
+import type { UseFormGetValues, UseFormSetValue } from 'react-hook-form';
 import type { LessonFormValues } from '@/types/admin';
+import type { FileType } from '@/types/lesson';
 import { Button } from '@/components/ui/Button';
 import { AdminMockFileDropzone } from '@/components/admin/AdminMockFileDropzone';
 import { cn } from '@/lib/utils/cn';
-import { uploadLessonFile } from '@/lib/storage/lessonFileUpload';
-import { persistLessonAssetAfterUpload } from '@/lib/storage/lessonAssetsSupabase';
 import { getSupabase } from '@/lib/supabase/client';
-import { LESSON_UPLOAD_ROWS } from '@/lib/storage/lessonUploadRows';
-import type { LessonUploadRowConfig } from '@/lib/storage/lessonUploadRows';
+import {
+  isStoragePath,
+  removeLessonAssetByStoragePath,
+  uploadLessonAsset,
+} from '@/lib/storage/lessonAssetsRepo';
 
 type UploadState = 'idle' | 'uploading' | 'uploaded' | 'error';
 
-interface StorageRowProps {
-  row: LessonUploadRowConfig;
+interface RowConfig {
+  id: string;
+  label: string;
+  hint: string;
+  accept: string;
+  field: 'pdf_url' | 'file_url';
+  fileType: FileType;
+  validate: (file: File) => string | null;
+}
+
+const ROWS: RowConfig[] = [
+  {
+    id: 'pdf',
+    label: 'PDF',
+    hint: 'Recomendado para el visor del aula.',
+    accept: 'application/pdf,.pdf',
+    field: 'pdf_url',
+    fileType: 'pdf',
+    validate: (f) =>
+      f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+        ? null
+        : 'Selecciona un archivo PDF.',
+  },
+  {
+    id: 'ppt',
+    label: 'Presentación (PPT/PPTX)',
+    hint: 'Se guarda en Archivo. El MVP recomienda PDF para vista previa.',
+    accept:
+      '.ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    field: 'file_url',
+    fileType: 'pptx',
+    validate: (f) => {
+      const n = f.name.toLowerCase();
+      if (n.endsWith('.ppt') || n.endsWith('.pptx')) return null;
+      if (f.type.includes('presentation') || f.type.includes('powerpoint'))
+        return null;
+      return 'Selecciona un PowerPoint (.ppt o .pptx).';
+    },
+  },
+  {
+    id: 'generic',
+    label: 'Archivo genérico',
+    hint: 'Cualquier archivo como recurso adicional.',
+    accept: '*/*',
+    field: 'file_url',
+    fileType: 'unsupported',
+    validate: () => null,
+  },
+];
+
+const MAX_BYTES = 50 * 1024 * 1024;
+
+interface RowProps {
+  row: RowConfig;
   courseId: string;
   lessonId: string;
   setValue: UseFormSetValue<LessonFormValues>;
+  getValues: UseFormGetValues<LessonFormValues>;
 }
 
-function StorageUploadRow({
-  row,
-  courseId,
-  lessonId,
-  setValue,
-}: StorageRowProps) {
+function UploadRow({ row, courseId, lessonId, setValue, getValues }: RowProps) {
   const [state, setState] = useState<UploadState>('idle');
-  const [errorHint, setErrorHint] = useState<string | null>(null);
-  const [lastUrl, setLastUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [pendingName, setPendingName] = useState<string | null>(null);
+  const [lastPath, setLastPath] = useState<string | null>(null);
 
   async function onFiles(files: File[]) {
     const file = files[0];
     if (!file) return;
-    const validationError = row.validate(file);
-    if (validationError) {
-      setErrorHint(validationError);
+    const sb = getSupabase();
+    if (!sb) {
+      setError('Supabase no está configurado.');
       setState('error');
       return;
     }
-    setErrorHint(null);
+    const v = row.validate(file);
+    if (v) {
+      setError(v);
+      setState('error');
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      setError(
+        `El archivo supera los ${Math.round(MAX_BYTES / 1024 / 1024)} MB.`,
+      );
+      setState('error');
+      return;
+    }
+    setError(null);
     setPendingName(file.name);
     setState('uploading');
     try {
-      const sb = getSupabase();
-      if (!sb) throw new Error('Supabase no está configurado.');
-
-      const { publicUrl, path } = await uploadLessonFile({
+      const prev = getValues(row.field);
+      const result = await uploadLessonAsset(sb, {
         courseId,
         lessonId,
         file,
+        fileTypeHint: row.fileType,
       });
-
-      await persistLessonAssetAfterUpload(sb, {
-        lessonId,
-        courseId,
-        file,
-        publicUrl,
-        storagePath: path,
-        fileType: row.fileType,
-        assetSlot: row.assetSlot,
+      setLastPath(result.storagePath);
+      setValue(row.field, result.storagePath, {
+        shouldDirty: true,
+        shouldValidate: true,
       });
-
-      setLastUrl(publicUrl);
-      setState('uploaded');
-      if (row.applyPdf) {
-        setValue('pdf_url', publicUrl, {
-          shouldDirty: true,
-          shouldValidate: true,
-        });
-      }
-      if (row.applyFile) {
-        setValue('file_url', publicUrl, {
-          shouldDirty: true,
-          shouldValidate: true,
-        });
-      }
       setValue('file_type', row.fileType, {
         shouldDirty: true,
         shouldValidate: true,
       });
-    } catch (e) {
-      setErrorHint(
-        e instanceof Error ? e.message : 'Error al subir el archivo.',
-      );
+      setState('uploaded');
+      if (prev && isStoragePath(prev) && prev !== result.storagePath) {
+        await removeLessonAssetByStoragePath(sb, prev).catch(() => undefined);
+      }
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : 'No se pudo subir el archivo.';
+      setError(msg);
       setState('error');
-      setLastUrl(null);
-      setPendingName(null);
     }
   }
 
+  async function onRemove() {
+    const sb = getSupabase();
+    const current = getValues(row.field);
+    if (sb && current && isStoragePath(current)) {
+      await removeLessonAssetByStoragePath(sb, current).catch(() => undefined);
+    }
+    setValue(row.field, '', { shouldDirty: true, shouldValidate: true });
+    setLastPath(null);
+    setPendingName(null);
+    setState('idle');
+    setError(null);
+  }
+
   const busy = state === 'uploading';
+  const currentValue = getValues(row.field);
+  const hasStoredPath = isStoragePath(currentValue);
 
   return (
     <li className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3">
@@ -101,13 +160,13 @@ function StorageUploadRow({
           {pendingName && state !== 'idle' ? (
             <p className="mt-1 truncate text-xs text-slate-700">{pendingName}</p>
           ) : null}
-          {lastUrl && state === 'uploaded' ? (
+          {lastPath ? (
             <p className="mt-0.5 truncate font-mono text-[10px] text-slate-500">
-              {lastUrl}
+              {lastPath}
             </p>
           ) : null}
-          {state === 'error' && errorHint ? (
-            <p className="mt-1 text-xs text-rose-600">{errorHint}</p>
+          {state === 'error' && error ? (
+            <p className="mt-1 text-xs text-rose-600">{error}</p>
           ) : null}
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -120,33 +179,34 @@ function StorageUploadRow({
               state === 'error' && 'bg-rose-50 text-rose-700',
             )}
           >
-            {state === 'idle' && 'Listo'}
+            {state === 'idle' && (hasStoredPath ? 'Asignado' : 'Listo')}
             {state === 'uploading' && 'Subiendo…'}
-            {state === 'uploaded' && 'Subido'}
-            {state === 'error' && 'Error'}
+            {state === 'uploaded' && 'Asignado'}
+            {state === 'error' && 'Revisa el archivo'}
           </span>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={busy}
-            onClick={() => {
-              setState('idle');
-              setErrorHint(null);
-              setPendingName(null);
-              setLastUrl(null);
-            }}
-          >
-            Reiniciar
-          </Button>
+          {hasStoredPath ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              onClick={() => void onRemove()}
+            >
+              Quitar
+            </Button>
+          ) : null}
         </div>
       </div>
       <AdminMockFileDropzone
         variant="compact"
         accept={row.accept}
         disabled={busy}
-        description="Suelta el archivo o haz clic para elegirlo (Supabase Storage)."
-        onFilesSelected={(files) => void onFiles(files)}
+        description={
+          hasStoredPath
+            ? 'Sube otro archivo para reemplazar.'
+            : 'Suelta el archivo o haz clic para elegirlo.'
+        }
+        onFilesSelected={(f) => void onFiles(f)}
       />
     </li>
   );
@@ -156,28 +216,35 @@ interface Props {
   courseId: string;
   lessonId: string;
   setValue: UseFormSetValue<LessonFormValues>;
+  getValues: UseFormGetValues<LessonFormValues>;
   className?: string;
 }
 
-export function LessonAssetUploader({ courseId, lessonId, setValue, className }: Props) {
+export function LessonAssetUploader({
+  courseId,
+  lessonId,
+  setValue,
+  getValues,
+  className,
+}: Props) {
   return (
     <div className={cn('md:col-span-2', className)}>
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-        Subir archivos (Supabase Storage)
+        Subir archivos de lección
       </p>
       <p className="mt-1 text-xs text-slate-500">
-        Bucket público <code className="rounded bg-slate-100 px-1">lesson-files</code>.
-        Cada subida registra metadata en <code className="rounded bg-slate-100 px-1">lesson_assets</code>.
-        Guarda la lección para sincronizar URL en el registro de la lección (visor del alumno).
+        Los archivos se guardan privados en Supabase Storage; el aula los abre
+        con URL firmada cuando el alumno tenga acceso.
       </p>
       <ul className="mt-3 space-y-3">
-        {LESSON_UPLOAD_ROWS.map((row) => (
-          <StorageUploadRow
+        {ROWS.map((row) => (
+          <UploadRow
             key={row.id}
             row={row}
             courseId={courseId}
             lessonId={lessonId}
             setValue={setValue}
+            getValues={getValues}
           />
         ))}
       </ul>

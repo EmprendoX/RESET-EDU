@@ -26,9 +26,6 @@ import { LoadingSkeleton } from '@/components/common/LoadingSkeleton';
 import { ErrorState } from '@/components/common/ErrorState';
 import { LessonAulaPreviewPanel } from '@/components/admin/LessonAulaPreviewPanel';
 import { LessonAssetUploader } from '@/components/admin/LessonAssetUploader';
-import { LessonAssetUploaderMock } from '@/components/admin/LessonAssetUploaderMock';
-import { env } from '@/config/env';
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
 interface Props {
   courseId: string;
@@ -36,8 +33,6 @@ interface Props {
 }
 
 export function LessonEditorPanel({ courseId, lessonId }: Props) {
-  const useLessonStorageUpload =
-    isSupabaseConfigured() && Boolean(getSupabase()) && env.useSupabaseData;
   const qc = useQueryClient();
   const q = useQuery({
     queryKey: queryKeys.admin.course(courseId),
@@ -52,6 +47,7 @@ export function LessonEditorPanel({ courseId, lessonId }: Props) {
     reset,
     watch,
     setValue,
+    getValues,
     formState: { isSubmitting },
   } = useForm<LessonFormValues>({ defaultValues: EMPTY_LESSON_FORM });
 
@@ -252,15 +248,12 @@ export function LessonEditorPanel({ courseId, lessonId }: Props) {
           />
         </div>
 
-        {useLessonStorageUpload ? (
-          <LessonAssetUploader
-            courseId={courseId}
-            lessonId={lessonId}
-            setValue={setValue}
-          />
-        ) : (
-          <LessonAssetUploaderMock setValue={setValue} />
-        )}
+        <LessonAssetUploader
+          courseId={courseId}
+          lessonId={lessonId}
+          setValue={setValue}
+          getValues={getValues}
+        />
       </div>
 
       {isModular ? (

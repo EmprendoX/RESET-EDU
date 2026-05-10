@@ -1,13 +1,16 @@
 import { FileQuestion } from 'lucide-react';
 import type { Lesson } from '@/types/lesson';
 import { Button } from '@/components/ui/Button';
+import { useResolvedAssetUrl } from '@/hooks/useResolvedAssetUrl';
 
 interface Props {
   lesson: Lesson;
 }
 
 export function UnsupportedFileViewer({ lesson }: Props) {
-  const url = lesson.file_url ?? lesson.pdf_url ?? lesson.video_url;
+  const raw =
+    lesson.file_url || lesson.pdf_url || lesson.video_url || '';
+  const { url } = useResolvedAssetUrl(raw);
   return (
     <div
       role="alert"
