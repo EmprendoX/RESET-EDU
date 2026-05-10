@@ -6,24 +6,42 @@ import {
   listEnrollmentsAdmin,
   revokeEnrollment,
   searchProfilesByEmail,
+  setUserRole,
+  type AppRole,
   type EnrollmentAdminRow,
 } from '@/lib/enrollments/enrollmentsAdminRepo';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { queryKeys } from '@/hooks/queryKeys';
 import { Button } from '@/components/ui/Button';
 import { LoadingSkeleton } from '@/components/common/LoadingSkeleton';
 import { ErrorState } from '@/components/common/ErrorState';
 import { cn } from '@/lib/utils/cn';
 
+type Tab = 'matriculas' | 'roles';
+
 export function AdminMatriculasPage() {
   const qc = useQueryClient();
   const supabaseOk = isSupabaseConfigured() && Boolean(getSupabase());
+  const { user } = useAuth();
+  const isSuperadmin = user.role === 'superadmin';
 
+  const [tab, setTab] = useState<Tab>('matriculas');
   const [courseFilter, setCourseFilter] = useState<string>('all');
   const [emailSearch, setEmailSearch] = useState('');
   const [pickerEmail, setPickerEmail] = useState('');
   const [pickerUserId, setPickerUserId] = useState<string | null>(null);
   const [pickerCourseId, setPickerCourseId] = useState('');
+
+  // Tab Roles state (solo superadmin)
+  const [rolesEmail, setRolesEmail] = useState('');
+  const [pendingRoleByUser, setPendingRoleByUser] = useState<
+    Record<string, AppRole>
+  >({});
+  const [roleFeedback, setRoleFeedback] = useState<{
+    kind: 'ok' | 'err';
+    message: string;
+  } | null>(null);
 
   const listQ = useQuery({
     queryKey: queryKeys.admin.enrollments(),
@@ -73,6 +91,38 @@ export function AdminMatriculasPage() {
       setPickerUserId(null);
       setPickerCourseId('');
       setPickerEmail('');
+    },
+  });
+
+  // Roles tab queries / mutations
+  const rolesSearchQ = useQuery({
+    queryKey: ['admin', 'roles-search', rolesEmail],
+    queryFn: () => searchProfilesByEmail(rolesEmail),
+    enabled: supabaseOk && isSuperadmin && rolesEmail.trim().length >= 2,
+  });
+
+  const setRoleM = useMutation({
+    mutationFn: ({ userId, role }: { userId: string; role: AppRole }) =>
+      setUserRole(userId, role),
+    onSuccess: (data) => {
+      setRoleFeedback({
+        kind: 'ok',
+        message: `Rol actualizado: ${data.email ?? data.id} → ${data.role}.`,
+      });
+      setPendingRoleByUser((prev) => {
+        const next = { ...prev };
+        delete next[data.id];
+        return next;
+      });
+      void qc.invalidateQueries({ queryKey: ['admin', 'roles-search'] });
+      void qc.invalidateQueries({ queryKey: ['admin', 'profile-search'] });
+    },
+    onError: (err) => {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : 'No se pudo cambiar el rol.';
+      setRoleFeedback({ kind: 'err', message: msg });
     },
   });
 
@@ -134,15 +184,72 @@ export function AdminMatriculasPage() {
   const courseOptions = coursesQ.data ?? [];
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 px-4 py-6">
+    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
       <header>
-        <h1 className="text-xl font-bold text-slate-900">Matrículas y accesos</h1>
+        <h1 className="text-xl font-bold text-slate-900">
+          Usuarios, accesos y roles
+        </h1>
         <p className="mt-1 text-sm text-slate-600">
-          Otorga o revoca acceso a cursos de pago. Los cursos marcados como{' '}
-          <strong>gratis</strong> no requieren fila en matrículas.
+          {tab === 'matriculas'
+            ? 'Otorga o revoca acceso a cursos de pago. Los cursos marcados como gratis no requieren fila en matrículas.'
+            : 'Cambia el rol de un usuario. Solo superadmin puede aplicar cambios; el resto recibirá error.'}
         </p>
       </header>
 
+      <div
+        role="tablist"
+        aria-label="Secciones de administración de usuarios"
+        className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'matriculas'}
+          onClick={() => setTab('matriculas')}
+          className={cn(
+            'rounded-lg px-3 py-1.5 text-sm font-medium transition',
+            tab === 'matriculas'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900',
+          )}
+        >
+          Matrículas
+        </button>
+        {isSuperadmin ? (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'roles'}
+            onClick={() => setTab('roles')}
+            className={cn(
+              'rounded-lg px-3 py-1.5 text-sm font-medium transition',
+              tab === 'roles'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900',
+            )}
+          >
+            Roles
+          </button>
+        ) : null}
+      </div>
+
+      {tab === 'roles' ? (
+        <RolesSection
+          isSuperadmin={isSuperadmin}
+          rolesEmail={rolesEmail}
+          setRolesEmail={setRolesEmail}
+          rolesSearchQ={rolesSearchQ}
+          pendingRoleByUser={pendingRoleByUser}
+          setPendingRoleByUser={setPendingRoleByUser}
+          setRoleM={setRoleM}
+          roleFeedback={roleFeedback}
+          clearFeedback={() => setRoleFeedback(null)}
+          currentUserId={user.id}
+        />
+      ) : null}
+
+      {tab === 'matriculas' ? (
+      <>
       <section className="surface-card space-y-4 p-6">
         <h2 className="text-sm font-semibold text-slate-900">Añadir acceso</h2>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -335,6 +442,188 @@ export function AdminMatriculasPage() {
           </table>
         </div>
       </section>
+      </>
+      ) : null}
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Roles tab — solo superadmin
+// ─────────────────────────────────────────────────────────────────────
+
+const ROLE_LABELS: Record<AppRole, string> = {
+  student: 'Alumno',
+  course_admin: 'Admin de cursos',
+  superadmin: 'Superadmin',
+};
+
+const ROLE_OPTIONS: AppRole[] = ['student', 'course_admin', 'superadmin'];
+
+interface RolesSectionProps {
+  isSuperadmin: boolean;
+  rolesEmail: string;
+  setRolesEmail: (v: string) => void;
+  rolesSearchQ: ReturnType<
+    typeof useQuery<
+      Awaited<ReturnType<typeof searchProfilesByEmail>>,
+      Error
+    >
+  >;
+  pendingRoleByUser: Record<string, AppRole>;
+  setPendingRoleByUser: React.Dispatch<
+    React.SetStateAction<Record<string, AppRole>>
+  >;
+  setRoleM: ReturnType<
+    typeof useMutation<
+      Awaited<ReturnType<typeof setUserRole>>,
+      Error,
+      { userId: string; role: AppRole }
+    >
+  >;
+  roleFeedback: { kind: 'ok' | 'err'; message: string } | null;
+  clearFeedback: () => void;
+  currentUserId: string;
+}
+
+function RolesSection({
+  isSuperadmin,
+  rolesEmail,
+  setRolesEmail,
+  rolesSearchQ,
+  pendingRoleByUser,
+  setPendingRoleByUser,
+  setRoleM,
+  roleFeedback,
+  clearFeedback,
+  currentUserId,
+}: RolesSectionProps) {
+  if (!isSuperadmin) {
+    return (
+      <ErrorState
+        title="Solo superadmin"
+        description="Esta sección requiere rol superadmin. Pídele a un superadmin que cambie tu rol o que opere desde aquí."
+      />
+    );
+  }
+
+  const results = rolesSearchQ.data ?? [];
+
+  return (
+    <section className="surface-card space-y-4 p-6">
+      <div className="space-y-2">
+        <label
+          className="text-xs font-medium text-slate-600"
+          htmlFor="roles-email"
+        >
+          Buscar usuario por email (mín. 2 caracteres)
+        </label>
+        <input
+          id="roles-email"
+          type="search"
+          value={rolesEmail}
+          onChange={(e) => setRolesEmail(e.target.value)}
+          placeholder="ejemplo@dominio.com"
+          className="focus-ring w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+          autoComplete="off"
+        />
+      </div>
+
+      {roleFeedback ? (
+        <div
+          className={cn(
+            'flex items-start justify-between gap-2 rounded-lg border px-3 py-2 text-sm',
+            roleFeedback.kind === 'ok'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+              : 'border-rose-200 bg-rose-50 text-rose-900',
+          )}
+          role="status"
+        >
+          <p className="leading-snug">{roleFeedback.message}</p>
+          <button
+            type="button"
+            onClick={clearFeedback}
+            className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium hover:bg-white/50"
+          >
+            Cerrar
+          </button>
+        </div>
+      ) : null}
+
+      {rolesSearchQ.isLoading && rolesEmail.trim().length >= 2 ? (
+        <p className="text-xs text-slate-500">Buscando…</p>
+      ) : null}
+
+      {rolesEmail.trim().length >= 2 && results.length === 0 && rolesSearchQ.isSuccess ? (
+        <p className="text-xs text-slate-500">Sin resultados.</p>
+      ) : null}
+
+      {results.length > 0 ? (
+        <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+          {results.map((p) => {
+            const currentRole = (p.role as AppRole | null) ?? 'student';
+            const pending = pendingRoleByUser[p.id] ?? currentRole;
+            const isCurrentUser = p.id === currentUserId;
+            const changed = pending !== currentRole;
+            const submitting =
+              setRoleM.isPending &&
+              setRoleM.variables?.userId === p.id;
+            return (
+              <li key={p.id} className="flex flex-wrap items-center gap-3 p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-slate-900">
+                    {p.email ?? 'sin email'}
+                    {isCurrentUser ? (
+                      <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                        tú
+                      </span>
+                    ) : null}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {p.full_name || '—'} · rol actual:{' '}
+                    <strong>{ROLE_LABELS[currentRole]}</strong>
+                  </p>
+                </div>
+                <select
+                  value={pending}
+                  onChange={(e) =>
+                    setPendingRoleByUser((prev) => ({
+                      ...prev,
+                      [p.id]: e.target.value as AppRole,
+                    }))
+                  }
+                  disabled={submitting}
+                  className="focus-ring rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm shadow-sm"
+                  aria-label={`Nuevo rol para ${p.email ?? p.id}`}
+                >
+                  {ROLE_OPTIONS.map((r) => (
+                    <option key={r} value={r}>
+                      {ROLE_LABELS[r]}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  disabled={!changed || submitting}
+                  onClick={() => {
+                    if (!changed) return;
+                    const confirmMsg =
+                      isCurrentUser && pending !== 'superadmin'
+                        ? `Vas a cambiar TU PROPIO rol a ${ROLE_LABELS[pending]}. Perderás acceso de superadmin. ¿Continuar?`
+                        : `¿Cambiar rol de ${p.email ?? p.id} a ${ROLE_LABELS[pending]}?`;
+                    if (!window.confirm(confirmMsg)) return;
+                    setRoleM.mutate({ userId: p.id, role: pending });
+                  }}
+                >
+                  {submitting ? 'Aplicando…' : 'Cambiar'}
+                </Button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </section>
   );
 }

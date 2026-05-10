@@ -133,3 +133,36 @@ export async function revokeEnrollment(
     .eq('course_id', courseId);
   if (error) throw error;
 }
+
+export type AppRole = 'student' | 'course_admin' | 'superadmin';
+
+export interface SetUserRoleResult {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  role: AppRole;
+  updated_at: string;
+}
+
+/**
+ * Cambia el rol de un usuario. Backend solo lo permite a superadmin
+ * (RPC `admin_set_user_role` valida con `is_superadmin()` y el trigger
+ * `profiles_enforce_role_change` bloquea cualquier UPDATE directo).
+ */
+export async function setUserRole(
+  userId: string,
+  role: AppRole,
+): Promise<SetUserRoleResult> {
+  assertConfigured();
+  const sb = getSupabase()!;
+  const { data, error } = await sb.rpc('admin_set_user_role', {
+    p_user_id: userId,
+    p_role: role,
+  });
+  if (error) throw error;
+  const rows = (data ?? []) as SetUserRoleResult[];
+  if (rows.length === 0) {
+    throw new Error('No se recibió respuesta del servidor.');
+  }
+  return rows[0];
+}

@@ -34,7 +34,7 @@ export function AdminNav() {
       </NavLink>
       <NavLink to="/admin/matriculas" className={linkClass}>
         <Users className="h-4 w-4 shrink-0" aria-hidden />
-        Matrículas
+        Usuarios
       </NavLink>
       <NavLink to="/admin/reportes" className={linkClass}>
         <BarChart3 className="h-4 w-4 shrink-0" aria-hidden />
