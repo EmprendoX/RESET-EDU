@@ -63,17 +63,19 @@ export function LandingPage() {
       ) : null}
 
       <section className="flex flex-col items-center gap-6 pt-8 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-ai-100 bg-ai-50 px-3 py-1 text-xs font-medium text-ai-700">
-          <Sparkles className="h-3.5 w-3.5" aria-hidden />
-          {supabaseMode ? 'RESET EDU' : 'Demo del Aula Inteligente — sin backend'}
-        </div>
+        <img
+          src="/Logot_Reset_Order.png"
+          alt="RESET EDU"
+          className="h-20 w-auto"
+        />
         <h1 className="text-balance text-4xl font-bold tracking-tight text-slate-900 md:text-5xl">
-          Aprende con cursos prácticos y un mentor IA aplicado a tu negocio.
+          Resetea la forma en la que aprendes.
         </h1>
+        <p className="text-balance max-w-prose text-lg font-medium text-slate-800 md:text-xl">
+          Ordena tus ideas, enfoca tu energía y convierte cada curso en un plan de acción real.
+        </p>
         <p className="text-balance max-w-prose text-base text-slate-600 md:text-lg">
-          {supabaseMode
-            ? 'Cursos cortos, contenido aplicable, y un mentor IA que entiende tu caso real.'
-            : 'Esta vista es el punto de entrada al Aula en modo demo.'}
+          Cursos prácticos, herramientas simples y un mentor IA que te ayuda a entender, aplicar y avanzar paso a paso en tus proyectos.
         </p>
 
         {supabaseMode && authReady ? (
