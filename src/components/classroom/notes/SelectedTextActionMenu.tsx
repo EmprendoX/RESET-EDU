@@ -100,9 +100,9 @@ export function SelectedTextActionMenu({
       role="menu"
       aria-label="Acciones de selección"
       style={{ top, left, width: MENU_WIDTH }}
-      className="fixed z-50 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10"
+      className="reset-dark fixed z-50 overflow-hidden rounded-xl border border-reset-border bg-reset-bg-2 shadow-2xl shadow-black/40"
     >
-      <div className="border-b border-slate-100 bg-slate-50/60 px-3 py-2 text-[11px] uppercase tracking-wide text-slate-500">
+      <div className="border-b border-reset-border bg-reset-bg-1 px-3 py-2 text-[11px] uppercase tracking-wide text-reset-text-muted">
         Selección · {selected.sourceType === 'pdf' ? 'PDF' : 'Texto'}
       </div>
       <div className="flex flex-col p-1.5">
@@ -115,18 +115,18 @@ export function SelectedTextActionMenu({
         <ActionItem
           onClick={handleSave}
           loading={busy === 'save'}
-          icon={<NotebookPen className="h-4 w-4 text-note-600" />}
+          icon={<NotebookPen className="h-4 w-4 text-note-300" />}
           label="Guardar como nota"
         />
-        <div className="my-1 h-px bg-slate-100" />
+        <div className="my-1 h-px bg-reset-border" />
         <ActionItem
           onClick={() => handleAskAI('qna', 'Pregunta sobre este texto')}
-          icon={<Sparkles className="h-4 w-4 text-ai-600" />}
+          icon={<Sparkles className="h-4 w-4 text-ai-300" />}
           label="Preguntar a la IA"
         />
         <ActionItem
           onClick={() => handleAskAI('summary', 'Resume este texto')}
-          icon={<FileText className="h-4 w-4 text-ai-600" />}
+          icon={<FileText className="h-4 w-4 text-ai-300" />}
           label="Resumir"
         />
         <ActionItem
@@ -136,7 +136,7 @@ export function SelectedTextActionMenu({
               'Aplica este texto a mi negocio',
             )
           }
-          icon={<Briefcase className="h-4 w-4 text-ai-600" />}
+          icon={<Briefcase className="h-4 w-4 text-ai-300" />}
           label="Aplicar a mi negocio"
         />
       </div>
@@ -166,10 +166,10 @@ function ActionItem({
       onClick={onClick}
       disabled={loading}
       className={cn(
-        'focus-ring flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50 disabled:opacity-60',
+        'focus-ring flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm text-white/90 transition hover:bg-reset-bg-3 disabled:opacity-60',
       )}
     >
-      <span className="text-slate-500">{icon}</span>
+      <span className="text-reset-text-muted">{icon}</span>
       <span className="font-medium">{label}</span>
     </button>
   );

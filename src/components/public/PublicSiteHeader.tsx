@@ -25,18 +25,18 @@ export function PublicSiteHeader() {
   }
 
   return (
-    <header className="border-b border-slate-200/80 bg-white/90 backdrop-blur">
+    <header className="reset-dark border-b border-reset-border bg-reset-bg-1/80 font-body backdrop-blur">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 px-4">
         <Link
           to="/"
-          className="text-sm font-semibold text-slate-900 hover:text-brand-700"
+          className="font-display text-sm font-semibold text-white transition hover:text-brand-300"
         >
           RESET EDU
         </Link>
         <nav className="flex flex-wrap items-center gap-2 text-sm">
           <Link
             to="/cursos"
-            className="font-medium text-slate-600 transition hover:text-slate-900"
+            className="font-medium text-reset-text-muted transition hover:text-white"
           >
             Cursos
           </Link>
@@ -44,14 +44,14 @@ export function PublicSiteHeader() {
             <>
               <Link
                 to="/dashboard"
-                className="font-medium text-slate-600 transition hover:text-slate-900"
+                className="font-medium text-reset-text-muted transition hover:text-white"
               >
                 Mi aula
               </Link>
               {user.role === 'course_admin' || user.role === 'superadmin' ? (
                 <Link
                   to="/admin"
-                  className="font-medium text-slate-600 transition hover:text-slate-900"
+                  className="font-medium text-reset-text-muted transition hover:text-white"
                 >
                   Admin
                 </Link>
@@ -80,7 +80,7 @@ export function PublicSiteHeader() {
               ) : (
                 <Link
                   to="/dashboard"
-                  className="font-medium text-brand-600 hover:text-brand-800"
+                  className="font-medium text-brand-300 transition hover:text-brand-200"
                 >
                   Entrar (demo)
                 </Link>

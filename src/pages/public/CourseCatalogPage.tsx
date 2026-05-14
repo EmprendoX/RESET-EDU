@@ -86,30 +86,30 @@ export function CourseCatalogPage() {
     return (
       <>
         <PublicSiteHeader />
-        <FullScreenSpinner label="Cargando…" />
+        <FullScreenSpinner tone="dark" label="Cargando…" />
       </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/80">
+    <div className="reset-dark min-h-screen bg-reset-bg-0 font-body text-white">
       <PublicSiteHeader />
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-8">
-        <nav className="flex flex-wrap items-center gap-1 text-xs text-slate-500">
-          <Link to="/" className="hover:text-slate-800">
+        <nav className="flex flex-wrap items-center gap-1 text-xs text-reset-text-muted">
+          <Link to="/" className="transition hover:text-white">
             Inicio
           </Link>
-          <span aria-hidden className="text-slate-400">
+          <span aria-hidden className="text-reset-text-dim">
             /
           </span>
-          <span className="text-slate-800">Cursos</span>
+          <span className="text-white">Cursos</span>
         </nav>
 
         <header>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-white">
             Catálogo de cursos
           </h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-reset-text-muted">
             Explora lo publicado. Con acceso podrás continuar en el aula; si un
             curso es de pago, necesitas matrícula activa.
           </p>
@@ -117,11 +117,11 @@ export function CourseCatalogPage() {
 
         <section
           aria-label="Filtros de catálogo"
-          className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:grid-cols-[1fr_repeat(4,minmax(0,auto))]"
+          className="reset-card grid gap-3 p-3 md:grid-cols-[1fr_repeat(4,minmax(0,auto))]"
         >
           <label className="relative block">
             <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-reset-text-dim"
               aria-hidden
             />
             <input
@@ -129,13 +129,13 @@ export function CourseCatalogPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar curso o categoría…"
-              className="focus-ring h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 shadow-sm"
+              className="focus-ring h-10 w-full rounded-lg border border-reset-border bg-reset-bg-3 pl-9 pr-3 text-sm text-white placeholder:text-reset-text-dim"
             />
           </label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="focus-ring h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm"
+            className="focus-ring h-10 rounded-lg border border-reset-border bg-reset-bg-3 px-3 text-sm text-white"
             aria-label="Categoría"
           >
             <option value="all">Todas las categorías</option>
@@ -148,7 +148,7 @@ export function CourseCatalogPage() {
           <select
             value={level}
             onChange={(e) => setLevel(e.target.value as LevelFilter)}
-            className="focus-ring h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm"
+            className="focus-ring h-10 rounded-lg border border-reset-border bg-reset-bg-3 px-3 text-sm text-white"
             aria-label="Nivel"
           >
             <option value="all">Todos los niveles</option>
@@ -159,7 +159,7 @@ export function CourseCatalogPage() {
           <select
             value={access}
             onChange={(e) => setAccess(e.target.value as AccessFilter)}
-            className="focus-ring h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm"
+            className="focus-ring h-10 rounded-lg border border-reset-border bg-reset-bg-3 px-3 text-sm text-white"
             aria-label="Precio"
           >
             <option value="all">Gratis y premium</option>
@@ -169,7 +169,7 @@ export function CourseCatalogPage() {
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}
-            className="focus-ring h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm"
+            className="focus-ring h-10 rounded-lg border border-reset-border bg-reset-bg-3 px-3 text-sm text-white"
             aria-label="Ordenar"
           >
             <option value="recommended">Recomendado</option>

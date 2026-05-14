@@ -33,12 +33,12 @@ export function VideoLessonPlayer({ lesson, embedded }: Props) {
   return (
     <div
       className={cn(
-        'flex h-full min-h-0 flex-col bg-slate-900',
-        embedded ? 'rounded-2xl border border-slate-200 bg-slate-900' : '',
+        'flex h-full min-h-0 flex-col bg-reset-bg-1',
+        embedded ? 'rounded-2xl border border-reset-border bg-reset-bg-1' : '',
       )}
     >
-      <div className="flex items-center gap-2 px-4 py-2.5 text-xs text-slate-200">
-        <Film className="h-3.5 w-3.5 text-slate-300" aria-hidden />
+      <div className="flex items-center gap-2 px-4 py-2.5 text-xs text-white/85">
+        <Film className="h-3.5 w-3.5 text-reset-text-muted" aria-hidden />
         <span className="font-medium">{lesson.title}</span>
       </div>
       <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
@@ -52,7 +52,7 @@ export function VideoLessonPlayer({ lesson, embedded }: Props) {
         />
       </div>
       {lesson.description ? (
-        <div className="bg-slate-900 px-4 py-3 text-sm text-slate-200">
+        <div className="bg-reset-bg-1 px-4 py-3 text-sm text-white/85">
           {lesson.description}
         </div>
       ) : null}

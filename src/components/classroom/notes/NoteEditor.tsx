@@ -70,8 +70,8 @@ export function NoteEditor({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2">
-        <div className="flex items-center gap-2 text-xs text-slate-500">
+      <div className="flex items-center justify-between gap-2 border-b border-reset-border bg-reset-bg-1 px-3 py-2">
+        <div className="flex items-center gap-2 text-xs text-reset-text-muted">
           <SourceBadge source={note.source} />
           <span aria-live="polite">
             <SaveStatus status={status} />
@@ -87,7 +87,7 @@ export function NoteEditor({
             <Pin
               className={cn(
                 'h-4 w-4',
-                note.is_pinned ? 'fill-current text-note-600' : 'text-slate-400',
+                note.is_pinned ? 'fill-current text-note-300' : 'text-reset-text-dim',
               )}
               aria-hidden
             />
@@ -98,7 +98,7 @@ export function NoteEditor({
             onClick={onRemove}
             aria-label="Eliminar nota"
           >
-            <Trash2 className="h-4 w-4 text-rose-500" aria-hidden />
+            <Trash2 className="h-4 w-4 text-rose-400" aria-hidden />
           </Button>
           <Button
             size="icon"
@@ -118,7 +118,7 @@ export function NoteEditor({
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Título de la nota"
           aria-label="Título"
-          className="focus-ring rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-base font-semibold text-slate-900 placeholder:text-slate-400 hover:bg-slate-50 focus:border-slate-200 focus:bg-white"
+          className="focus-ring rounded-lg border border-transparent bg-transparent px-2 py-1.5 font-display text-base font-semibold text-white placeholder:text-reset-text-dim hover:bg-reset-bg-2 focus:border-reset-border focus:bg-reset-bg-2"
         />
 
         <textarea
@@ -126,7 +126,7 @@ export function NoteEditor({
           onChange={(e) => setContent(e.target.value)}
           placeholder="Escribe tu nota… Puedes pegar texto seleccionado del PDF, lección o IA."
           aria-label="Contenido"
-          className="focus-ring scrollbar-thin min-h-[180px] flex-1 resize-none rounded-lg border border-slate-200 bg-white p-3 text-sm leading-relaxed text-slate-800 placeholder:text-slate-400"
+          className="focus-ring scrollbar-thin min-h-[180px] flex-1 resize-none rounded-lg border border-reset-border bg-reset-bg-2 p-3 text-sm leading-relaxed text-white placeholder:text-reset-text-dim"
         />
 
         <div className="flex flex-wrap items-center gap-1.5">
@@ -137,14 +137,14 @@ export function NoteEditor({
                 type="button"
                 onClick={() => removeTag(tag)}
                 aria-label={`Quitar tag ${tag}`}
-                className="focus-ring -mr-0.5 ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-slate-200"
+                className="focus-ring -mr-0.5 ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-reset-bg-3"
               >
                 <X className="h-3 w-3" aria-hidden />
               </button>
             </Badge>
           ))}
-          <div className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300 px-2 py-0.5">
-            <Tag className="h-3 w-3 text-slate-400" aria-hidden />
+          <div className="inline-flex items-center gap-1 rounded-full border border-dashed border-reset-border-strong px-2 py-0.5">
+            <Tag className="h-3 w-3 text-reset-text-dim" aria-hidden />
             <input
               type="text"
               value={tagInput}
@@ -157,7 +157,7 @@ export function NoteEditor({
               }}
               placeholder="Agregar tag"
               aria-label="Agregar tag"
-              className="w-24 bg-transparent text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none"
+              className="w-24 bg-transparent text-xs text-white placeholder:text-reset-text-dim focus:outline-none"
             />
           </div>
         </div>
@@ -170,29 +170,29 @@ function SaveStatus({ status }: { status: ReturnType<typeof useAutosave>['status
   switch (status) {
     case 'saving':
       return (
-        <span className="inline-flex items-center gap-1 text-slate-500">
+        <span className="inline-flex items-center gap-1 text-reset-text-muted">
           <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
           Guardando…
         </span>
       );
     case 'pending':
       return (
-        <span className="inline-flex items-center gap-1 text-slate-500">
+        <span className="inline-flex items-center gap-1 text-reset-text-muted">
           <Save className="h-3 w-3" aria-hidden />
           Cambios sin guardar
         </span>
       );
     case 'saved':
       return (
-        <span className="inline-flex items-center gap-1 text-emerald-600">
+        <span className="inline-flex items-center gap-1 text-emerald-300">
           <Check className="h-3 w-3" aria-hidden />
           Guardado
         </span>
       );
     case 'error':
-      return <span className="text-rose-500">Error al guardar</span>;
+      return <span className="text-rose-400">Error al guardar</span>;
     default:
-      return <span className="text-slate-400">Listo</span>;
+      return <span className="text-reset-text-dim">Listo</span>;
   }
 }
 

@@ -37,7 +37,7 @@ export function AIChatWindow({
   return (
     <div
       ref={scrollRef}
-      className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto bg-slate-50"
+      className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto bg-reset-bg-0"
     >
       {isLoading ? (
         <LoadingSkeleton variant="chat" />

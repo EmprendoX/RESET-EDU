@@ -39,7 +39,7 @@ export function ClassroomPage() {
   const { user, isAuthenticated, authReady } = useAuth();
 
   if (!authReady) {
-    return <FullScreenSpinner label="Cargando sesión…" />;
+    return <FullScreenSpinner tone="dark" label="Cargando sesión…" />;
   }
   if (!isAuthenticated) {
     if (isSupabaseConfigured()) {
@@ -91,7 +91,7 @@ function ClassroomPageAuthed({
   );
 
   if (gateQuery.isLoading) {
-    return <FullScreenSpinner label="Cargando aula…" />;
+    return <FullScreenSpinner tone="dark" label="Cargando aula…" />;
   }
 
   if (gateQuery.isError) {
@@ -114,7 +114,7 @@ function ClassroomPageAuthed({
 
   if (!lessonId) {
     if (firstLessonQuery.isLoading) {
-      return <FullScreenSpinner label="Cargando aula…" />;
+      return <FullScreenSpinner tone="dark" label="Cargando aula…" />;
     }
     if (firstLessonQuery.data) {
       return (
@@ -134,7 +134,7 @@ function ClassroomPageAuthed({
         />
       );
     }
-    return <FullScreenSpinner label="Cargando aula…" />;
+    return <FullScreenSpinner tone="dark" label="Cargando aula…" />;
   }
 
   return (
@@ -278,7 +278,7 @@ function ClassroomPageInner({
             isError={lessonQuery.isError}
             onRetry={() => void lessonQuery.refetch()}
           />
-          <div className="border-t border-slate-200 bg-white px-3 py-3 lg:hidden">
+          <div className="border-t border-reset-border bg-reset-bg-1 px-3 py-3 lg:hidden">
             <LessonNavigation
               courseSlug={courseSlug}
               previousLesson={previous}
@@ -341,7 +341,7 @@ function ClassroomPageInner({
 
 function FullScreenError({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex h-[100dvh] items-center justify-center bg-slate-50 p-6">
+    <div className="reset-dark flex h-[100dvh] items-center justify-center bg-reset-bg-0 p-6 text-white">
       <ErrorState
         title="No pudimos cargar el aula"
         description="Revisa tu conexión y vuelve a intentar."

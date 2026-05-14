@@ -16,19 +16,19 @@ interface Props {
 const STATUS_CFG: Record<LessonStatusVisual, { label: string; classes: string }> = {
   completed: {
     label: 'Lección completada',
-    classes: 'border-emerald-200 bg-emerald-50 text-emerald-600',
+    classes: 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300',
   },
   current: {
     label: 'Lección actual',
-    classes: 'border-brand-200 bg-brand-50 text-brand-600',
+    classes: 'border-brand-500/40 bg-brand-500/15 text-brand-300',
   },
   pending: {
     label: 'Lección pendiente',
-    classes: 'border-slate-200 bg-white text-slate-400',
+    classes: 'border-reset-border bg-reset-bg-2 text-reset-text-dim',
   },
   locked: {
     label: 'Lección bloqueada',
-    classes: 'border-slate-200 bg-slate-50 text-slate-400',
+    classes: 'border-reset-border bg-reset-bg-3 text-reset-text-dim',
   },
 };
 

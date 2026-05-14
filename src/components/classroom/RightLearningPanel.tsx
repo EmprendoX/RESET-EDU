@@ -29,7 +29,7 @@ export function RightLearningPanel({
     <aside
       aria-label="Panel de notas y mentor"
       className={cn(
-        'flex h-full min-h-0 flex-col border-l border-slate-200 bg-white',
+        'flex h-full min-h-0 flex-col border-l border-reset-border bg-reset-bg-1',
         className,
       )}
     >
@@ -37,7 +37,7 @@ export function RightLearningPanel({
         <div
           role="tablist"
           aria-label="Notas o Mentor IA"
-          className="flex shrink-0 border-b border-slate-200"
+          className="flex shrink-0 border-b border-reset-border"
         >
           {TABS.map(({ id, label, Icon }) => {
             const isActive = id === activeTab;
@@ -52,8 +52,8 @@ export function RightLearningPanel({
                 className={cn(
                   'focus-ring flex flex-1 items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-medium transition',
                   isActive
-                    ? 'border-b-2 border-brand-500 text-brand-700'
-                    : 'border-b-2 border-transparent text-slate-500 hover:text-slate-800',
+                    ? 'border-b-2 border-brand-400 text-brand-300'
+                    : 'border-b-2 border-transparent text-reset-text-muted hover:text-white',
                 )}
               >
                 <Icon className="h-4 w-4" aria-hidden />

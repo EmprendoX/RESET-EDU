@@ -115,23 +115,23 @@ export function NotesPanel({ courseId, lessonId }: Props) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2">
-        <p className="text-sm font-semibold text-slate-800">
+      <div className="flex items-center justify-between gap-2 border-b border-reset-border bg-reset-bg-1 px-3 py-2">
+        <p className="font-display text-sm font-semibold text-white">
           Mis notas
-          <span className="ml-1 text-xs font-normal text-slate-400">
+          <span className="ml-1 text-xs font-normal text-reset-text-dim">
             · {notes.length}
           </span>
         </p>
         <QuickNoteButton onClick={handleCreate} disabled={!courseId} />
       </div>
 
-      <div className="flex shrink-0 flex-col gap-2 border-b border-slate-100 bg-white px-3 py-2">
+      <div className="flex shrink-0 flex-col gap-2 border-b border-reset-border bg-reset-bg-1 px-3 py-2">
         <NotesSearch value={search} onChange={setSearch} />
         <NotesFilter value={filter} onChange={setFilter} />
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,40%)_1fr] divide-y divide-slate-100">
-        <div className="scrollbar-thin flex flex-col gap-2 overflow-y-auto bg-slate-50 p-2">
+      <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,40%)_1fr] divide-y divide-reset-border">
+        <div className="scrollbar-thin flex flex-col gap-2 overflow-y-auto bg-reset-bg-0 p-2">
           {visibleNotes.length === 0 ? (
             <EmptyState
               icon={NotebookPen}
@@ -157,7 +157,7 @@ export function NotesPanel({ courseId, lessonId }: Props) {
           )}
         </div>
 
-        <div className="bg-white">
+        <div className="bg-reset-bg-1">
           {activeNote ? (
             <NoteEditor
               key={activeNote.id}

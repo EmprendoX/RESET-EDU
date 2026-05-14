@@ -79,9 +79,9 @@ export function AIInputBox({
   }
 
   return (
-    <div className="border-t border-slate-200 bg-white p-2.5">
+    <div className="border-t border-reset-border bg-reset-bg-1 p-2.5">
       {selectedTextPreview ? (
-        <div className="mb-2 flex items-start gap-2 rounded-lg border border-brand-100 bg-brand-50/60 px-2.5 py-1.5 text-xs text-brand-800">
+        <div className="mb-2 flex items-start gap-2 rounded-lg border border-brand-500/30 bg-brand-500/10 px-2.5 py-1.5 text-xs text-brand-200">
           <span className="font-medium">Selección:</span>
           <span className="line-clamp-2 flex-1">
             {truncate(selectedTextPreview, 200)}
@@ -91,7 +91,7 @@ export function AIInputBox({
               type="button"
               onClick={onClearSelection}
               aria-label="Quitar selección del contexto"
-              className="focus-ring -mr-1 inline-flex h-5 w-5 items-center justify-center rounded-md text-brand-500 hover:bg-brand-100"
+              className="focus-ring -mr-1 inline-flex h-5 w-5 items-center justify-center rounded-md text-brand-300 hover:bg-brand-500/20"
             >
               <X className="h-3.5 w-3.5" aria-hidden />
             </button>
@@ -99,7 +99,7 @@ export function AIInputBox({
         </div>
       ) : null}
 
-      <div className="flex items-end gap-2 rounded-xl border border-slate-200 bg-white p-1.5 focus-within:border-ai-300 focus-within:ring-1 focus-within:ring-ai-200">
+      <div className="flex items-end gap-2 rounded-xl border border-reset-border bg-reset-bg-2 p-1.5 focus-within:border-ai-500/40 focus-within:ring-1 focus-within:ring-ai-500/30">
         <textarea
           ref={taRef}
           value={value}
@@ -118,7 +118,7 @@ export function AIInputBox({
           placeholder="Escribe tu pregunta o usa los botones rápidos arriba…"
           aria-label="Mensaje al mentor IA"
           className={cn(
-            'scrollbar-thin max-h-40 min-h-[40px] flex-1 resize-none border-0 bg-transparent p-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none',
+            'scrollbar-thin max-h-40 min-h-[40px] flex-1 resize-none border-0 bg-transparent p-2 text-sm text-white placeholder:text-reset-text-dim focus:outline-none',
           )}
         />
         {isSpeechSupported ? (
@@ -149,7 +149,7 @@ export function AIInputBox({
       </div>
 
       {currentMode ? (
-        <p className="mt-1.5 flex items-center gap-1 text-[11px] text-slate-400">
+        <p className="mt-1.5 flex items-center gap-1 text-[11px] text-reset-text-dim">
           <Sparkles className="h-3 w-3" aria-hidden />
           Enter para enviar · Modo activo: {MODE_LABEL[currentMode]}
         </p>

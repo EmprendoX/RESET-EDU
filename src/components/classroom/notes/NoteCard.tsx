@@ -42,8 +42,8 @@ export function NoteCard({
       className={cn(
         'group relative flex flex-col gap-1.5 rounded-xl border p-3 text-left transition',
         isActive
-          ? 'border-brand-300 bg-brand-50/50 shadow-sm'
-          : 'border-slate-200 bg-white hover:border-slate-300',
+          ? 'border-brand-500/40 bg-brand-500/10 shadow-lg'
+          : 'border-reset-border bg-reset-bg-2 hover:border-reset-border-strong',
       )}
     >
       <button
@@ -53,7 +53,7 @@ export function NoteCard({
         aria-label={`Abrir nota: ${note.title}`}
       />
       <header className="relative flex items-start justify-between gap-2">
-        <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-slate-900">
+        <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-white">
           {note.title || 'Sin título'}
         </h4>
         <div className="flex shrink-0 items-center">
@@ -64,8 +64,8 @@ export function NoteCard({
             className={cn(
               'focus-ring relative z-10 inline-flex h-7 w-7 items-center justify-center rounded-md transition',
               note.is_pinned
-                ? 'text-note-600 hover:bg-note-100'
-                : 'text-slate-400 opacity-0 hover:bg-slate-100 group-hover:opacity-100',
+                ? 'text-note-300 hover:bg-note-500/20'
+                : 'text-reset-text-dim opacity-0 hover:bg-reset-bg-3 group-hover:opacity-100',
             )}
           >
             {note.is_pinned ? (
@@ -78,13 +78,13 @@ export function NoteCard({
             type="button"
             onClick={onRemove}
             aria-label="Eliminar nota"
-            className="focus-ring relative z-10 inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 opacity-0 hover:bg-rose-50 hover:text-rose-600 group-hover:opacity-100"
+            className="focus-ring relative z-10 inline-flex h-7 w-7 items-center justify-center rounded-md text-reset-text-dim opacity-0 hover:bg-rose-500/15 hover:text-rose-300 group-hover:opacity-100"
           >
             <Trash2 className="h-4 w-4" aria-hidden />
           </button>
         </div>
       </header>
-      <p className="relative line-clamp-2 text-xs text-slate-600">
+      <p className="relative line-clamp-2 text-xs text-reset-text-muted">
         {truncate(note.content.replace(/\n/g, ' ').trim(), 160)}
       </p>
       <footer className="relative mt-1 flex flex-wrap items-center gap-1.5">
@@ -97,7 +97,7 @@ export function NoteCard({
             #{tag}
           </Badge>
         ))}
-        <span className="ml-auto text-[11px] text-slate-400">
+        <span className="ml-auto text-[11px] text-reset-text-dim">
           {timeAgo(note.updated_at)}
         </span>
       </footer>

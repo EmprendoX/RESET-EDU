@@ -20,7 +20,7 @@ export function LessonProgressBar({
   return (
     <div className={cn('flex flex-col gap-1', className)}>
       <div
-        className="flex items-center justify-between text-[11px] font-medium text-slate-500"
+        className="flex items-center justify-between text-[11px] font-medium text-reset-text-muted"
         aria-hidden={compact}
       >
         <span className="uppercase tracking-wide">Progreso</span>
@@ -39,7 +39,7 @@ export function LessonProgressBar({
         aria-valuenow={pct}
         aria-label="Progreso del curso"
         className={cn(
-          'relative h-1.5 w-full overflow-hidden rounded-full bg-slate-200',
+          'relative h-1.5 w-full overflow-hidden rounded-full bg-reset-bg-3',
           compact && 'h-1',
         )}
       >

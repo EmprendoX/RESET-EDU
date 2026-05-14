@@ -22,7 +22,7 @@ export function LessonContentArea({
       aria-busy={loading}
       data-lesson-id={lesson?.id}
       className={cn(
-        'relative flex h-full min-h-0 flex-col overflow-hidden bg-slate-50',
+        'relative flex h-full min-h-0 flex-col overflow-hidden bg-reset-bg-0',
         className,
       )}
     >

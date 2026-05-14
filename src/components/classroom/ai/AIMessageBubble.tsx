@@ -81,7 +81,7 @@ export function AIMessageBubble({
       )}
     >
       {isAssistant ? (
-        <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ai-100 text-ai-600">
+        <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ai-500/15 text-ai-300">
           <Sparkles className="h-3.5 w-3.5" aria-hidden />
         </div>
       ) : null}
@@ -96,8 +96,8 @@ export function AIMessageBubble({
           className={cn(
             'rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed',
             isUser
-              ? 'rounded-tr-sm bg-brand-600 text-white'
-              : 'rounded-tl-sm border border-slate-200 bg-white text-slate-800',
+              ? 'rounded-tr-sm bg-brand-500 text-white'
+              : 'rounded-tl-sm border border-reset-border bg-reset-bg-2 text-white/90',
           )}
         >
           <RichTextRenderer content={message.content} />
@@ -112,7 +112,7 @@ export function AIMessageBubble({
                 <Copy
                   className={cn(
                     'h-3.5 w-3.5',
-                    copied ? 'text-emerald-600' : 'text-slate-400',
+                    copied ? 'text-emerald-300' : 'text-reset-text-dim',
                   )}
                 />
               }
@@ -138,7 +138,7 @@ export function AIMessageBubble({
                   isSpeakingThisMessage ? (
                     <Square className="h-3.5 w-3.5" aria-hidden />
                   ) : (
-                    <Volume2 className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                    <Volume2 className="h-3.5 w-3.5 text-reset-text-dim" aria-hidden />
                   )
                 }
               >
@@ -154,7 +154,7 @@ export function AIMessageBubble({
               leftIcon={
                 savedAsNote ? (
                   <BookmarkCheck
-                    className="h-3.5 w-3.5 text-emerald-600"
+                    className="h-3.5 w-3.5 text-emerald-300"
                     aria-hidden
                   />
                 ) : (
@@ -179,7 +179,7 @@ export function AIMessageBubble({
       </div>
 
       {isUser ? (
-        <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-500">
+        <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-reset-bg-3 text-reset-text-muted">
           <User2 className="h-3.5 w-3.5" aria-hidden />
         </div>
       ) : null}

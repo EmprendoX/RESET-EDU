@@ -10,7 +10,7 @@ export function TextLessonViewer({ lesson, embedded }: Props) {
   return (
     <div
       className={cn(
-        'h-full min-h-0 overflow-hidden bg-slate-50',
+        'h-full min-h-0 overflow-hidden bg-reset-bg-0',
         embedded ? '' : 'flex flex-col',
       )}
     >
@@ -21,14 +21,14 @@ export function TextLessonViewer({ lesson, embedded }: Props) {
         )}
       >
         <div className="flex flex-col gap-1">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-reset-text-dim">
             Lección · Texto
           </p>
-          <h2 className="text-balance text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+          <h2 className="text-balance font-display text-2xl font-bold tracking-tight text-white md:text-3xl">
             {lesson.title}
           </h2>
           {lesson.description ? (
-            <p className="text-balance text-sm text-slate-600 md:text-base">
+            <p className="text-balance text-sm text-reset-text-muted md:text-base">
               {lesson.description}
             </p>
           ) : null}
@@ -38,7 +38,7 @@ export function TextLessonViewer({ lesson, embedded }: Props) {
           data-selectable
           data-source-type="text"
           data-lesson-id={lesson.id}
-          className="prose-classroom mt-4 leading-relaxed text-slate-800"
+          className="prose-classroom mt-4 leading-relaxed text-white/90"
         >
           {(lesson.content_text ?? '').split('\n\n').map((block, idx) => (
             <BlockRenderer key={idx} block={block.trim()} />
@@ -53,21 +53,21 @@ function BlockRenderer({ block }: { block: string }) {
   if (!block) return null;
   if (block.startsWith('## ')) {
     return (
-      <h3 className="mt-8 text-xl font-semibold tracking-tight text-slate-900">
+      <h3 className="mt-8 text-xl font-semibold tracking-tight text-white">
         {block.slice(3)}
       </h3>
     );
   }
   if (block.startsWith('### ')) {
     return (
-      <h4 className="mt-6 text-base font-semibold text-slate-900">
+      <h4 className="mt-6 text-base font-semibold text-white">
         {block.slice(4)}
       </h4>
     );
   }
   if (block.startsWith('> ')) {
     return (
-      <blockquote className="mt-4 border-l-4 border-brand-300 bg-brand-50/60 px-4 py-2 text-slate-700">
+      <blockquote className="mt-4 border-l-4 border-brand-400 bg-brand-500/10 px-4 py-2 text-white/85">
         {block.slice(2)}
       </blockquote>
     );
@@ -75,7 +75,7 @@ function BlockRenderer({ block }: { block: string }) {
   if (/^\d+\.\s/.test(block)) {
     const items = block.split('\n').map((l) => l.replace(/^\d+\.\s/, ''));
     return (
-      <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-slate-800">
+      <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-white/90">
         {items.map((item, i) => (
           <li key={i}>{renderInline(item)}</li>
         ))}
@@ -85,14 +85,14 @@ function BlockRenderer({ block }: { block: string }) {
   if (block.startsWith('- ')) {
     const items = block.split('\n').map((l) => l.replace(/^-\s/, ''));
     return (
-      <ul className="mt-3 list-disc space-y-1.5 pl-5 text-slate-800">
+      <ul className="mt-3 list-disc space-y-1.5 pl-5 text-white/90">
         {items.map((item, i) => (
           <li key={i}>{renderInline(item)}</li>
         ))}
       </ul>
     );
   }
-  return <p className="mt-3 text-base text-slate-800">{renderInline(block)}</p>;
+  return <p className="mt-3 text-base text-white/90">{renderInline(block)}</p>;
 }
 
 function renderInline(text: string): React.ReactNode {
@@ -100,7 +100,7 @@ function renderInline(text: string): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return parts.map((part, i) =>
     part.startsWith('**') && part.endsWith('**') ? (
-      <strong key={i} className="font-semibold text-slate-900">
+      <strong key={i} className="font-semibold text-white">
         {part.slice(2, -2)}
       </strong>
     ) : (

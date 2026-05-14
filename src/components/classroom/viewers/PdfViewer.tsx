@@ -121,14 +121,14 @@ export function PdfViewer({ lesson, embedded }: Props) {
     <div
       ref={containerRef}
       className={cn(
-        'flex h-full min-h-0 flex-col bg-slate-100',
-        embedded ? 'rounded-2xl border border-slate-200 bg-white' : '',
+        'flex h-full min-h-0 flex-col bg-reset-bg-1',
+        embedded ? 'rounded-2xl border border-reset-border bg-reset-bg-2' : '',
       )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 md:px-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-reset-border bg-reset-bg-1 px-3 py-2 md:px-4">
         <div className="flex min-w-0 items-center gap-2 text-sm">
-          <FileText className="h-4 w-4 shrink-0 text-rose-500" aria-hidden />
-          <span className="truncate font-medium text-slate-800">
+          <FileText className="h-4 w-4 shrink-0 text-rose-400" aria-hidden />
+          <span className="truncate font-medium text-white/90">
             {fileName}
           </span>
         </div>
@@ -145,7 +145,7 @@ export function PdfViewer({ lesson, embedded }: Props) {
           </Button>
           <span
             aria-live="polite"
-            className="px-1 text-xs tabular-nums text-slate-600"
+            className="px-1 text-xs tabular-nums text-reset-text-muted"
           >
             {pageNumber} / {numPages ?? '–'}
           </span>
@@ -162,7 +162,7 @@ export function PdfViewer({ lesson, embedded }: Props) {
           >
             <ChevronRight className="h-4 w-4" aria-hidden />
           </Button>
-          <span className="mx-1 hidden h-5 w-px bg-slate-200 md:inline-block" />
+          <span className="mx-1 hidden h-5 w-px bg-reset-border md:inline-block" />
           <Button
             size="sm"
             variant="ghost"
@@ -171,7 +171,7 @@ export function PdfViewer({ lesson, embedded }: Props) {
           >
             <Minus className="h-4 w-4" aria-hidden />
           </Button>
-          <span className="px-1 text-xs tabular-nums text-slate-600">
+          <span className="px-1 text-xs tabular-nums text-reset-text-muted">
             {Math.round(scale * 100)}%
           </span>
           <Button
@@ -203,7 +203,7 @@ export function PdfViewer({ lesson, embedded }: Props) {
         data-source-type="pdf"
         data-page={pageNumber}
         data-file-name={fileName}
-        className="scrollbar-thin flex min-h-0 flex-1 flex-col items-center overflow-auto bg-slate-200 px-3 py-4"
+        className="scrollbar-thin flex min-h-0 flex-1 flex-col items-center overflow-auto bg-reset-bg-0 px-3 py-4"
       >
         {loadError ? (
           <FileErrorState
@@ -235,7 +235,7 @@ export function PdfViewer({ lesson, embedded }: Props) {
               renderAnnotationLayer
               renderTextLayer
               loading={<FileLoadingState label="Renderizando página…" />}
-              className="overflow-hidden rounded-lg bg-white shadow"
+              className="overflow-hidden rounded-lg bg-white shadow-2xl"
             />
           </Document>
         )}

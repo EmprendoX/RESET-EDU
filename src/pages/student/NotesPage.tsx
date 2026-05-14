@@ -81,7 +81,7 @@ export function NotesPage() {
   }, [notes, search, pinnedOnly, sourceFilter]);
 
   if (!authReady) {
-    return <FullScreenSpinner label="Cargando sesión…" />;
+    return <FullScreenSpinner tone="dark" label="Cargando sesión…" />;
   }
   if (!isAuthenticated) {
     if (isSupabaseConfigured()) {
@@ -97,19 +97,23 @@ export function NotesPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-4xl space-y-4 px-4 py-10">
-        <LoadingSkeleton variant="sidebar" rows={5} />
+      <div className="reset-dark min-h-screen bg-reset-bg-0 font-body text-white">
+        <div className="mx-auto max-w-4xl space-y-4 px-4 py-10">
+          <LoadingSkeleton variant="sidebar" rows={5} />
+        </div>
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-10">
-        <ErrorState
-          title="No pudimos cargar tus notas"
-          onRetry={() => void refetch()}
-        />
+      <div className="reset-dark min-h-screen bg-reset-bg-0 font-body text-white">
+        <div className="mx-auto max-w-4xl px-4 py-10">
+          <ErrorState
+            title="No pudimos cargar tus notas"
+            onRetry={() => void refetch()}
+          />
+        </div>
       </div>
     );
   }
@@ -124,38 +128,39 @@ export function NotesPage() {
   }
 
   return (
+    <div className="reset-dark min-h-screen bg-reset-bg-0 font-body text-white">
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">
-      <nav className="flex flex-wrap items-center gap-1 text-xs text-slate-500">
-        <Link to="/" className="hover:text-slate-800">
+      <nav className="flex flex-wrap items-center gap-1 text-xs text-reset-text-muted">
+        <Link to="/" className="transition hover:text-white">
           Inicio
         </Link>
         <ChevronRight className="h-3 w-3" aria-hidden />
-        <Link to="/dashboard" className="hover:text-slate-800">
+        <Link to="/dashboard" className="transition hover:text-white">
           Dashboard
         </Link>
         <ChevronRight className="h-3 w-3" aria-hidden />
         {courseId ? (
           <>
-            <Link to="/notas" className="hover:text-slate-800">
+            <Link to="/notas" className="transition hover:text-white">
               Notas
             </Link>
             <ChevronRight className="h-3 w-3" aria-hidden />
-            <span className="text-slate-800">{courseTitle ?? 'Curso'}</span>
+            <span className="text-white">{courseTitle ?? 'Curso'}</span>
           </>
         ) : (
-          <span className="text-slate-800">Notas</span>
+          <span className="text-white">Notas</span>
         )}
       </nav>
 
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-slate-900">
-            <NotebookPen className="h-6 w-6 text-note-600" aria-hidden />
+          <h1 className="flex items-center gap-2 font-display text-2xl font-bold tracking-tight text-white">
+            <NotebookPen className="h-6 w-6 text-note-400" aria-hidden />
             {courseId
               ? `Notas — ${courseTitle ?? 'Curso'}`
               : 'Mis notas'}
           </h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-reset-text-muted">
             {courseId
               ? 'Notas que has guardado en este curso, manuales o desde el mentor IA.'
               : 'Todas tus notas. Filtra por curso, búscalas o ábrelas para volver a la lección.'}
@@ -165,7 +170,7 @@ export function NotesPage() {
           <button
             type="button"
             onClick={() => navigate('/notas')}
-            className="focus-ring inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="focus-ring inline-flex h-9 items-center rounded-lg border border-reset-border bg-reset-bg-2 px-3.5 text-sm font-medium text-white/90 transition hover:bg-reset-bg-3"
           >
             Ver todas
           </button>
@@ -175,7 +180,7 @@ export function NotesPage() {
       <div className="grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-center">
         <label className="relative block">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-reset-text-dim"
             aria-hidden
           />
           <input
@@ -183,7 +188,7 @@ export function NotesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar en título, contenido o tags…"
-            className="focus-ring h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 shadow-sm"
+            className="focus-ring h-10 w-full rounded-lg border border-reset-border bg-reset-bg-3 pl-9 pr-3 text-sm text-white placeholder:text-reset-text-dim"
           />
         </label>
         <select
@@ -191,7 +196,7 @@ export function NotesPage() {
           onChange={(e) =>
             setSourceFilter(e.target.value as typeof sourceFilter)
           }
-          className="focus-ring h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm"
+          className="focus-ring h-10 rounded-lg border border-reset-border bg-reset-bg-3 px-3 text-sm text-white"
         >
           <option value="all">Todas las fuentes</option>
           <option value="manual">Manuales</option>
@@ -202,10 +207,10 @@ export function NotesPage() {
           type="button"
           onClick={() => setPinnedOnly((v) => !v)}
           className={cn(
-            'focus-ring inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border px-3 text-sm font-medium shadow-sm transition',
+            'focus-ring inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition',
             pinnedOnly
-              ? 'border-amber-200 bg-amber-50 text-amber-900'
-              : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50',
+              ? 'border-amber-500/30 bg-amber-500/10 text-amber-200'
+              : 'border-reset-border bg-reset-bg-2 text-white/90 hover:bg-reset-bg-3',
           )}
         >
           {pinnedOnly ? <Pin className="h-4 w-4" /> : <PinOff className="h-4 w-4" />}
@@ -215,14 +220,14 @@ export function NotesPage() {
 
       {!courseId && (coursesQuery.data?.length ?? 0) > 0 ? (
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="font-medium uppercase tracking-wide text-slate-500">
+          <span className="font-medium uppercase tracking-wide text-reset-text-muted">
             Por curso:
           </span>
           {(coursesQuery.data ?? []).map((c) => (
             <Link
               key={c.id}
               to={`/notas/${c.id}`}
-              className="focus-ring rounded-full border border-slate-200 bg-white px-3 py-1 font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+              className="focus-ring rounded-full border border-reset-border bg-reset-bg-2 px-3 py-1 font-medium text-white/90 transition hover:bg-reset-bg-3"
             >
               {c.title}
             </Link>
@@ -251,21 +256,21 @@ export function NotesPage() {
               return (
                 <li
                   key={n.id}
-                  className="surface-panel rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                  className="reset-card p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
                           to={noteHref(n)}
-                          className="font-semibold text-slate-900 hover:text-brand-700"
+                          className="font-display font-semibold text-white transition hover:text-brand-300"
                         >
                           {n.title || 'Sin título'}
                         </Link>
                         {n.is_pinned ? (
                           <span
                             title="Fijada"
-                            className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800"
+                            className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200"
                           >
                             <Pin className="mr-1 h-3 w-3" /> Fijada
                           </span>
@@ -273,20 +278,20 @@ export function NotesPage() {
                         {n.source === 'ai' ? (
                           <span
                             title="Del mentor IA"
-                            className="inline-flex items-center rounded-full bg-ai-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ai-800"
+                            className="inline-flex items-center rounded-full bg-ai-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ai-300"
                           >
                             <Sparkles className="mr-1 h-3 w-3" /> IA
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-sm text-slate-600">
+                      <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-sm text-reset-text-muted">
                         {n.content || '—'}
                       </p>
-                      <p className="mt-2 flex flex-wrap gap-2 text-[11px] text-slate-500">
+                      <p className="mt-2 flex flex-wrap gap-2 text-[11px] text-reset-text-dim">
                         {courseInfo ? (
                           <Link
                             to={`/notas/${n.course_id}`}
-                            className="font-medium text-slate-700 hover:underline"
+                            className="font-medium text-reset-text-muted hover:underline"
                           >
                             {courseInfo.title}
                           </Link>
@@ -307,7 +312,7 @@ export function NotesPage() {
                       <button
                         type="button"
                         onClick={() => void togglePin(n.id)}
-                        className="focus-ring inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+                        className="focus-ring inline-flex h-8 w-8 items-center justify-center rounded-lg border border-reset-border bg-reset-bg-2 text-reset-text-muted transition hover:bg-reset-bg-3 hover:text-white"
                         title={n.is_pinned ? 'Desfijar' : 'Fijar'}
                       >
                         {n.is_pinned ? (
@@ -327,7 +332,7 @@ export function NotesPage() {
                             void removeNote(n.id);
                           }
                         }}
-                        className="focus-ring inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-rose-500 transition hover:bg-rose-50 hover:text-rose-700"
+                        className="focus-ring inline-flex h-8 w-8 items-center justify-center rounded-lg border border-reset-border bg-reset-bg-2 text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-300"
                         title="Eliminar"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -340,6 +345,7 @@ export function NotesPage() {
           </ul>
         )}
       </section>
+    </div>
     </div>
   );
 }

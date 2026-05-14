@@ -16,14 +16,14 @@ export function UnsupportedFileViewer({ lesson }: Props) {
       role="alert"
       className="flex h-full min-h-[40vh] flex-col items-center justify-center gap-3 p-6 text-center"
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-600">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/15 text-amber-300">
         <FileQuestion className="h-6 w-6" aria-hidden />
       </div>
       <div className="space-y-1">
-        <h3 className="text-base font-semibold text-slate-800">
+        <h3 className="text-base font-semibold text-white">
           No podemos mostrar este archivo en el Aula
         </h3>
-        <p className="text-balance max-w-prose text-sm text-slate-500">
+        <p className="text-balance max-w-prose text-sm text-reset-text-muted">
           El formato no es soportado en esta versión. Si eres el instructor,
           sube una versión en PDF o usa una URL de video.
         </p>

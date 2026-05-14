@@ -47,8 +47,8 @@ export function NotesFilter({ value, onChange, className }: Props) {
             className={cn(
               'focus-ring inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition',
               isActive
-                ? 'border-brand-300 bg-brand-50 text-brand-700'
-                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50',
+                ? 'border-brand-500/40 bg-brand-500/15 text-brand-300'
+                : 'border-reset-border bg-reset-bg-2 text-reset-text-muted hover:bg-reset-bg-3 hover:text-white',
             )}
           >
             {Icon ? <Icon className="h-3 w-3" aria-hidden /> : null}

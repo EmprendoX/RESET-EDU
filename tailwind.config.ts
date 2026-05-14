@@ -39,6 +39,23 @@ const config: Config = {
           500: '#f59e0b',
           600: '#d97706',
         },
+        reset: {
+          'bg-0': '#000000',
+          'bg-1': '#0A0A0A',
+          'bg-2': '#111111',
+          'bg-3': '#1A1A1A',
+          border: 'rgba(255, 255, 255, 0.08)',
+          'border-strong': 'rgba(255, 255, 255, 0.14)',
+          'text-muted': '#A0A0A0',
+          'text-dim': '#6B6B6B',
+          red: '#FF1E1E',
+          'red-2': '#FF4D4D',
+          'red-dim': 'rgba(255, 30, 30, 0.18)',
+          blue: '#1E4DFF',
+          'blue-2': '#4A6FFF',
+          success: '#3DDC97',
+          danger: '#B91C1C',
+        },
       },
       fontFamily: {
         sans: [
@@ -49,6 +66,13 @@ const config: Config = {
           'Roboto',
           'sans-serif',
         ],
+        display: [
+          'Plus Jakarta Sans',
+          'DM Sans',
+          'system-ui',
+          'sans-serif',
+        ],
+        body: ['DM Sans', 'system-ui', '-apple-system', 'sans-serif'],
       },
       maxWidth: {
         prose: '70ch',

@@ -53,7 +53,7 @@ export function CourseSidebar({
       <aside
         aria-label="Temario del curso"
         className={cn(
-          'h-full overflow-y-auto border-r border-slate-200 bg-white',
+          'h-full overflow-y-auto border-r border-reset-border bg-reset-bg-1',
           className,
         )}
       >
@@ -66,7 +66,7 @@ export function CourseSidebar({
       <aside
         aria-label="Temario del curso"
         className={cn(
-          'h-full overflow-y-auto border-r border-slate-200 bg-white',
+          'h-full overflow-y-auto border-r border-reset-border bg-reset-bg-1',
           className,
         )}
       >
@@ -83,7 +83,7 @@ export function CourseSidebar({
       <aside
         aria-label="Temario del curso"
         className={cn(
-          'h-full overflow-y-auto border-r border-slate-200 bg-white',
+          'h-full overflow-y-auto border-r border-reset-border bg-reset-bg-1',
           className,
         )}
       >
@@ -106,11 +106,11 @@ export function CourseSidebar({
         className,
       )}
     >
-      <div className="border-b border-slate-100 p-4">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+      <div className="border-b border-reset-border p-4">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-reset-text-dim">
           Temario
         </p>
-        <h2 className="mt-1 text-sm font-semibold text-slate-900">
+        <h2 className="mt-1 font-display text-sm font-semibold text-white">
           {structure.course.title}
         </h2>
       </div>
@@ -173,8 +173,8 @@ function ModularLessonsList({
         return (
           <li key={module.id} className="space-y-1.5">
             <div className="flex items-center gap-2 px-1.5 py-1">
-              <Layers className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <Layers className="h-3.5 w-3.5 text-reset-text-dim" aria-hidden />
+              <p className="text-xs font-semibold uppercase tracking-wide text-reset-text-muted">
                 {module.title}
               </p>
             </div>
@@ -236,7 +236,7 @@ function SectionGroup({
   return (
     <li className="space-y-1">
       {section.title ? (
-        <p className="px-2 text-[11px] font-medium text-slate-400">
+        <p className="px-2 text-[11px] font-medium text-reset-text-dim">
           {section.title}
         </p>
       ) : null}
@@ -296,8 +296,8 @@ function SidebarLessonItem({
         className={cn(
           'focus-ring group flex items-start gap-2.5 rounded-lg px-2 py-2 text-sm transition',
           isCurrent
-            ? 'bg-brand-50 text-brand-900 ring-1 ring-brand-200'
-            : 'text-slate-700 hover:bg-slate-50',
+            ? 'bg-brand-500/15 text-white ring-1 ring-brand-500/40'
+            : 'text-white/85 hover:bg-reset-bg-3',
         )}
       >
         <LessonStatusBadge status={status} className="mt-0.5" />
@@ -306,7 +306,7 @@ function SidebarLessonItem({
             <span
               className={cn(
                 'shrink-0 text-[11px] font-medium tabular-nums',
-                isCurrent ? 'text-brand-500' : 'text-slate-400',
+                isCurrent ? 'text-brand-300' : 'text-reset-text-dim',
               )}
             >
               {index.toString().padStart(2, '0')}
@@ -320,7 +320,7 @@ function SidebarLessonItem({
               {lesson.title}
             </p>
           </div>
-          <div className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-400">
+          <div className="mt-0.5 flex items-center gap-2 text-[11px] text-reset-text-dim">
             <span className="inline-flex items-center gap-1">
               <Icon className="h-3 w-3" aria-hidden />
               {FILE_TYPE_LABELS[lesson.file_type]}

@@ -66,7 +66,7 @@ export function ClassroomTopbar({
   return (
     <header
       className={cn(
-        'sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur',
+        'sticky top-0 z-30 border-b border-reset-border bg-reset-bg-1/90 backdrop-blur',
         className,
       )}
       role="banner"
@@ -75,12 +75,12 @@ export function ClassroomTopbar({
         <Link
           to="/"
           aria-label="Volver al inicio"
-          className="focus-ring inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+          className="focus-ring inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-reset-text-muted hover:bg-reset-bg-3 hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
         </Link>
 
-        <div className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 md:inline-flex">
+        <div className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500/15 text-brand-300 md:inline-flex">
           <GraduationCap className="h-5 w-5" aria-hidden />
         </div>
 
@@ -89,10 +89,10 @@ export function ClassroomTopbar({
             <LoadingSkeleton variant="topbar" rows={2} />
           ) : (
             <div className="flex flex-col gap-0.5">
-              <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-reset-text-dim">
                 {course.title}
               </p>
-              <h1 className="truncate text-sm font-semibold text-slate-900 md:text-base">
+              <h1 className="truncate font-display text-sm font-semibold text-white md:text-base">
                 {lesson.title}
               </h1>
             </div>
@@ -111,7 +111,7 @@ export function ClassroomTopbar({
         <div className="hidden items-center gap-1 md:flex">
           <Link
             to="/dashboard"
-            className="focus-ring rounded-lg px-2 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
+            className="focus-ring rounded-lg px-2 py-1.5 text-xs font-medium text-reset-text-muted hover:bg-reset-bg-3 hover:text-white"
           >
             <span className="inline-flex items-center gap-1">
               <LayoutDashboard className="h-3.5 w-3.5" aria-hidden />
@@ -120,7 +120,7 @@ export function ClassroomTopbar({
           </Link>
           <Link
             to="/mi-negocio"
-            className="focus-ring rounded-lg px-2 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
+            className="focus-ring rounded-lg px-2 py-1.5 text-xs font-medium text-reset-text-muted hover:bg-reset-bg-3 hover:text-white"
           >
             <span className="inline-flex items-center gap-1">
               <Building2 className="h-3.5 w-3.5" aria-hidden />
@@ -147,14 +147,14 @@ export function ClassroomTopbar({
               type="button"
               disabled={signingOut}
               onClick={() => void handleSignOut()}
-              className="focus-ring inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50"
+              className="focus-ring inline-flex items-center gap-1 rounded-lg border border-reset-border bg-reset-bg-2 px-2 py-1.5 text-xs font-medium text-reset-text-muted transition hover:bg-reset-bg-3 hover:text-white"
             >
               <LogOut className="h-3.5 w-3.5" aria-hidden />
               Salir
             </button>
           ) : null}
           <span
-            className="focus-ring inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm"
+            className="focus-ring inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-reset-border bg-reset-bg-2 text-reset-text-muted"
             aria-label={user.full_name ?? 'Cuenta'}
           >
             <User2 className="h-4 w-4" aria-hidden />

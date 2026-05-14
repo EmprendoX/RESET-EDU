@@ -57,7 +57,7 @@ export function StudentDashboardPage() {
   });
 
   if (!authReady) {
-    return <FullScreenSpinner label="Cargando sesión…" />;
+    return <FullScreenSpinner tone="dark" label="Cargando sesión…" />;
   }
   if (!isAuthenticated) {
     if (isSupabaseConfigured()) {
@@ -77,19 +77,23 @@ export function StudentDashboardPage() {
 
   if (q.isPending || q.isLoading || profileLoading) {
     return (
-      <div className="mx-auto max-w-5xl space-y-6 px-4 py-10">
-        <LoadingSkeleton variant="sidebar" rows={4} />
+      <div className="reset-dark min-h-screen bg-reset-bg-0 font-body text-white">
+        <div className="mx-auto max-w-5xl space-y-6 px-4 py-10">
+          <LoadingSkeleton variant="sidebar" rows={4} />
+        </div>
       </div>
     );
   }
 
   if (q.isError) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-10">
-        <ErrorState
-          title="No pudimos cargar tu dashboard"
-          onRetry={() => void q.refetch()}
-        />
+      <div className="reset-dark min-h-screen bg-reset-bg-0 font-body text-white">
+        <div className="mx-auto max-w-5xl px-4 py-10">
+          <ErrorState
+            title="No pudimos cargar tu dashboard"
+            onRetry={() => void q.refetch()}
+          />
+        </div>
       </div>
     );
   }
@@ -97,44 +101,45 @@ export function StudentDashboardPage() {
   const data = q.data!;
 
   return (
+    <div className="reset-dark min-h-screen bg-reset-bg-0 font-body text-white">
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-8">
-      <nav className="flex flex-wrap items-center gap-1 text-xs text-slate-500">
-        <Link to="/" className="hover:text-slate-800">
+      <nav className="flex flex-wrap items-center gap-1 text-xs text-reset-text-muted">
+        <Link to="/" className="transition hover:text-white">
           Inicio
         </Link>
         <ChevronRight className="h-3 w-3" aria-hidden />
-        <Link to="/cursos" className="hover:text-slate-800">
+        <Link to="/cursos" className="transition hover:text-white">
           Cursos
         </Link>
         <ChevronRight className="h-3 w-3" aria-hidden />
-        <span className="text-slate-800">Dashboard</span>
+        <span className="text-white">Dashboard</span>
       </nav>
 
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-white">
             Hola, {user.full_name?.split(' ')[0] ?? 'alumno'}
           </h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-reset-text-muted">
             Continúa donde lo dejaste y mantén tu perfil listo para el mentor.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link
             to="/mis-cursos"
-            className="focus-ring inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="focus-ring inline-flex h-9 items-center rounded-lg border border-reset-border bg-reset-bg-2 px-3.5 text-sm font-medium text-white/90 transition hover:bg-reset-bg-3"
           >
             Mis cursos
           </Link>
           <Link
             to="/notas"
-            className="focus-ring inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="focus-ring inline-flex h-9 items-center rounded-lg border border-reset-border bg-reset-bg-2 px-3.5 text-sm font-medium text-white/90 transition hover:bg-reset-bg-3"
           >
             Mis notas
           </Link>
           <Link
             to="/mi-negocio"
-            className="focus-ring inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="focus-ring inline-flex h-9 items-center rounded-lg border border-reset-border bg-reset-bg-2 px-3.5 text-sm font-medium text-white/90 transition hover:bg-reset-bg-3"
           >
             Mi negocio
           </Link>
@@ -142,14 +147,14 @@ export function StudentDashboardPage() {
       </header>
 
       {profileIncomplete ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
           <p className="font-medium">Completa tu perfil de negocio</p>
-          <p className="mt-1 text-amber-900/90">
+          <p className="mt-1 text-amber-200/80">
             Así el mentor IA puede aplicar mejor las lecciones a tu caso.
           </p>
           <Link
             to="/mi-negocio"
-            className="mt-2 inline-flex items-center gap-1 font-semibold text-amber-900 underline underline-offset-2 hover:text-amber-950"
+            className="mt-2 inline-flex items-center gap-1 font-semibold text-amber-200 underline underline-offset-2 hover:text-amber-100"
           >
             Ir a Mi negocio
             <ArrowRight className="h-3.5 w-3.5" aria-hidden />
@@ -171,14 +176,14 @@ export function StudentDashboardPage() {
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <NotebookPen className="h-5 w-5 text-note-600" aria-hidden />
-            <h2 className="text-lg font-semibold text-slate-900">
+            <NotebookPen className="h-5 w-5 text-note-400" aria-hidden />
+            <h2 className="font-display text-lg font-semibold text-white">
               Notas recientes
             </h2>
           </div>
           <Link
             to="/notas"
-            className="text-xs font-medium text-brand-600 hover:text-brand-700"
+            className="text-xs font-medium text-brand-300 transition hover:text-brand-200"
           >
             Ver todas →
           </Link>
@@ -190,20 +195,20 @@ export function StudentDashboardPage() {
             description="Abre una lección y crea notas desde el panel derecho o desde el mentor IA."
           />
         ) : (
-          <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+          <ul className="divide-y divide-reset-border rounded-xl border border-reset-border bg-reset-bg-2">
             {data.notes.map((n) => (
               <li key={n.id}>
                 <Link
                   to={noteHref(n, data.slugByCourseId)}
-                  className="focus-ring block px-4 py-3 transition hover:bg-slate-50"
+                  className="focus-ring block px-4 py-3 transition hover:bg-reset-bg-3"
                 >
-                  <p className="font-medium text-slate-900">
+                  <p className="font-medium text-white">
                     {n.title || 'Sin título'}
                   </p>
-                  <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">
+                  <p className="mt-0.5 line-clamp-2 text-xs text-reset-text-muted">
                     {n.content.replace(/\n/g, ' ').trim() || '—'}
                   </p>
-                  <p className="mt-1 text-[10px] uppercase text-slate-400">
+                  <p className="mt-1 text-[10px] uppercase text-reset-text-dim">
                     Ver en el curso
                   </p>
                 </Link>
@@ -212,6 +217,7 @@ export function StudentDashboardPage() {
           </ul>
         )}
       </section>
+    </div>
     </div>
   );
 }

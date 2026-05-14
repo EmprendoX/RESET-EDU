@@ -23,7 +23,7 @@ export function ClassroomLayout({
   return (
     <div
       className={cn(
-        'flex h-[100dvh] min-h-0 w-full flex-col bg-slate-100 text-slate-900',
+        'reset-dark flex h-[100dvh] min-h-0 w-full flex-col bg-reset-bg-0 font-body text-white',
         className,
       )}
     >

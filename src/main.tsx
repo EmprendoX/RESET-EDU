@@ -24,7 +24,7 @@ if (!rootEl) throw new Error('Root container #root not found');
 createRoot(rootEl).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
         <App />
       </BrowserRouter>
     </QueryClientProvider>

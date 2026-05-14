@@ -73,7 +73,7 @@ export function AIQuickActions({ onPick, disabled, className }: Props) {
           type="button"
           onClick={() => onPick({ mode, prompt })}
           disabled={disabled}
-          className="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ai-200 bg-ai-50 px-3 py-1.5 text-xs font-medium text-ai-700 transition hover:bg-ai-100 disabled:opacity-60"
+          className="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ai-500/30 bg-ai-500/10 px-3 py-1.5 text-xs font-medium text-ai-200 transition hover:bg-ai-500/20 hover:text-ai-100 disabled:opacity-60"
         >
           <Icon className="h-3.5 w-3.5" aria-hidden />
           {label}
